@@ -1,0 +1,14 @@
+import 'package:equation/equation.dart';
+
+void main() {
+  Eq eq;
+  /*eq = x * C(2) + C(5);
+  print('$eq => ${eq.simplify()}');
+
+  eq = C(2) + x + C(5);
+  print('$eq => ${eq.simplify()}');*/
+
+  eq = C(-4 * 3) * x + C(-8) * y;
+  print('$eq => ${eq.separateConstant()}');
+  print('$eq => $eq');
+}
