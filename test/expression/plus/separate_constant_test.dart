@@ -6,13 +6,13 @@ import '../../testing.dart';
 
 class _TestCase {
   final Eq eq;
-  final C c;
+  final Constant c;
   final Eq result;
 
   _TestCase(this.eq, this.c, this.result);
 
   static List<_TestCase> cases = [
-    _TestCase(C(2) * x + C(2) * y, C(2), x + y),
+    _TestCase(Constant(2) * x + Constant(2) * y, Constant(2), x + y),
   ];
 }
 

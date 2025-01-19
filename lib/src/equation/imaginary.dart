@@ -4,7 +4,7 @@ class Imaginary extends Eq {
   const Imaginary._();
 
   @override
-  Eq expandDivisions() => this;
+  Eq simplifyDivisionOfAddition() => this;
 
   @override
   Eq expandMultiplications() => this;
@@ -16,15 +16,33 @@ class Imaginary extends Eq {
   Eq simplify() => this;
 
   @override
-  Eq simplifyPowers() => this;
+  Eq distributeExponent() => this;
 
   @override
-  Eq simplifyMultiplications() => this;
+  Eq combineMultiplicationsAndPowers() => this;
+
+  @override
+  Eq factorOutAddition() => this;
 
   @override
   Eq substitute(Map<String, Eq> substitutions) {
     return substitutions['i'] ?? this;
   }
+
+  @override
+  Eq combineAddition() => this;
+
+  @override
+  Eq factorOutMinus() => this;
+
+  @override
+  Eq dissolveMinus() => this;
+
+  @override
+  Eq distributeMinus() => this;
+
+  @override
+  bool get isLone => true;
 }
 
 const i = Imaginary._();

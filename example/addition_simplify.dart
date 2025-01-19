@@ -8,7 +8,7 @@ void main() {
   eq = C(2) + x + C(5);
   print('$eq => ${eq.simplify()}');*/
 
-  eq = C(-4 * 3) * x + C(-8) * y;
+  eq = Constant(-4 * 3) * x + Constant(-8) * y;
   print('$eq => ${eq.separateConstant()}');
   print('$eq => $eq');
 }

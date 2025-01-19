@@ -2,30 +2,39 @@ import 'package:equation/equation.dart';
 
 void main() {
   Eq line = a * x + b * y + c;
-  print(line);
   line = (line as Plus).equationOf(y);
   print(line);
 
-  Eq circle = (x - h).pow(C(2)) - (y - k).pow(C(2)) - r.pow(C(2));
+  Eq circle = (x - h).pow(Constant(2)) - (y - k).pow(Constant(2)) - r.pow(Constant(2));
   print(circle);
-  circle = circle.expandMultiplications().simplify();
+  print('Expand multiplications');
+  circle = circle.expandMultiplications().combineAddition();
   print(circle);
 
+  print('substituting y');
   circle = circle.substitute({'y': line});
   print(circle);
-  circle = circle.simplifyPowers();
+  print('distributing exponent');
+  circle = circle.distributeExponent();
+  print(circle);
+
+  print('expanding multiplications');
+  circle = circle.expandMultiplications();
+  print(circle);
+
+  circle = circle.simplifyDivisionOfAddition();
+  print(circle);
+
+  circle = circle.combineAddition();
+  print(circle);
+
+  circle = circle.simplify();
   print(circle);
 
   circle = circle.expandMultiplications();
   print(circle);
 
-  circle = circle.expandDivisions();
-  print(circle);
-
-  circle = circle.expandPlus();
-  print(circle);
-
-  circle = circle.simplify();
+  circle = circle.combineAddition();
   print(circle);
 
   /*final quad = circle.asQuadratic(x);

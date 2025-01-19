@@ -5,14 +5,14 @@ import '../../testing.dart';
 
 class _AddTermsTest {
   final Eq eq1;
-  final C c;
+  final Constant c;
   final Eq e;
 
   _AddTermsTest(this.eq1, this.c, this.e);
 
   static final cases = [
-    _AddTermsTest(-C(2) * x * -h, C(2), x * h),
-    _AddTermsTest(-h.pow(C(2)), C(-1), h.pow(C(2))),
+    _AddTermsTest(-Constant(2) * x * -h, Constant(2), x * h),
+    _AddTermsTest(-h.pow(Constant(2)), Constant(-1), h.pow(Constant(2))),
   ];
 }
 

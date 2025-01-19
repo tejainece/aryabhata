@@ -10,10 +10,10 @@ class _AddTermsTest {
   _AddTermsTest(this.eq, this.res);
 
   static final cases = [
-    _AddTermsTest(-h * -h, h.pow(C(2))),
+    _AddTermsTest(-h * -h, h.pow(Constant(2))),
     _AddTermsTest(
-      -(C(2) * ((C(4) * a * x * c) / (C(2) * b.pow(C(2))))),
-      -((C(8) * a * x * c) / (C(2) * (b.pow(C(2))))),
+      -(Constant(2) * ((Constant(4) * a * x * c) / (Constant(2) * b.pow(Constant(2))))),
+      -((Constant(8) * a * x * c) / (Constant(2) * (b.pow(Constant(2))))),
     ),
   ];
 }

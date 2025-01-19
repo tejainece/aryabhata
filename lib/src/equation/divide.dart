@@ -1,3 +1,4 @@
+/*
 import 'package:equation/equation.dart';
 
 class Divide extends Eq {
@@ -18,11 +19,6 @@ class Divide extends Eq {
   }
 
   @override
-  Eq substitute(Map<String, Eq> substitutions) {
-    return Divide(expressions.map((e) => e.substitute(substitutions)).toList());
-  }
-
-  @override
   Eq simplify() {
     var ret = expressions.map((e) => e.simplify()).toList();
     var numerator = ret[0];
@@ -34,16 +30,16 @@ class Divide extends Eq {
     final numeratorC = numerator.toConstant();
     if (denomC != null) {
       if (denomC == 0) {
-        return C(double.infinity);
+        return Constant(double.infinity);
       } else if (denomC == 1) {
         return numerator;
       }
       if (numeratorC != null) {
-        return C(numeratorC / denomC);
+        return Constant(numeratorC / denomC);
       }
     }
     if (numerator.isSame(denom)) {
-      return C(1);
+      return Constant(1);
     }
     // TODO handle unary minuses
     List<Eq> denominatorTerms;
@@ -65,11 +61,11 @@ class Divide extends Eq {
         i--;
       }
       if (denominatorTerms.isEmpty ||
-          Times(denominatorTerms).simplify().isSame(C(1))) {
+          Times(denominatorTerms).simplify().isSame(Constant(1))) {
         return Times(numeratorTerms).simplify();
       }
       if (numeratorTerms.isEmpty) {
-        numeratorTerms.add(C(1));
+        numeratorTerms.add(Constant(1));
       }
       return Divide([
         Times(numeratorTerms).simplify(),
@@ -78,6 +74,103 @@ class Divide extends Eq {
     }
     return Divide([numerator, denom]);
   }
+
+  @override
+  (Constant, Eq) separateConstant() {
+    // TODO improve this
+    return (Constant(1.0), this);
+  }
+
+  @override
+  Eq factorOutMinus() {
+    final ret = expressions.map((e) => e.factorOutMinus()).toList();
+    bool isMinus = false;
+    for (int i = 0; i < ret.length; i++) {
+      if (ret[i] is! Minus) {
+        continue;
+      }
+      ret[i] = (ret[i] as Minus).expression;
+      isMinus = !isMinus;
+    }
+    if (isMinus) {
+      return Minus(Divide._(ret));
+    }
+    return Divide._(ret);
+  }
+
+  @override
+  Eq dissolveMinus() {
+    bool isMinus = false;
+    final ret = <Eq>[];
+    for (var e in expressions) {
+      e = e.dissolveMinus();
+      if (e is Minus) {
+        isMinus = !isMinus;
+        ret.add(e.expression);
+      } else {
+        ret.add(e);
+      }
+    }
+    if (isMinus) {
+      return Minus(Divide(ret));
+    }
+    return Divide(ret);
+  }
+
+  @override
+  Eq distributeMinus() =>
+      Divide(expressions.map((e) => e.distributeMinus()).toList());
+
+  @override
+  Eq combineAddition() =>
+      Divide(expressions.map((e) => e.combineAddition()).toList());
+
+  @override
+  Eq expandMultiplications() =>
+      Divide(expressions.map((e) => e.expandMultiplications()).toList());
+
+  @override
+  Eq distributeExponent() =>
+      Divide(expressions.map((e) => e.distributeExponent()).toList());
+
+  Eq get numerator => expressions.first;
+
+  Eq get denominator =>
+      expressions.length == 1
+          ? Constant(1.0)
+          : Times(expressions.skip(1).toList());
+
+  @override
+  Eq simplifyDivisionOfAddition() {
+    final numerator = this.numerator.simplifyDivisionOfAddition();
+    if (expressions.length == 1) {
+      return numerator;
+    }
+    if (numerator is! Plus) {
+      return this;
+    }
+    final denominator = this.denominator.simplifyDivisionOfAddition();
+    final ret = <Eq>[];
+    for (final part in numerator.expressions) {
+      ret.add(Divide([part, denominator]));
+    }
+    return Plus(ret);
+  }
+
+  @override
+  Eq combineMultiplicationsAndPowers() =>
+      Divide(expressions.map((e) => e.combineMultiplicationsAndPowers()).toList());
+
+  @override
+  Eq factorOutAddition() =>
+      Divide(expressions.map((e) => e.factorOutAddition()).toList());
+
+  @override
+  Eq substitute(Map<String, Eq> substitutions) =>
+      Divide(expressions.map((e) => e.substitute(substitutions)).toList());
+
+  @override
+  bool hasVariable(Variable v) => expressions.any((e) => e.hasVariable(v));
 
   @override
   bool isSame(Eq otherSimplified, [double epsilon = 1e-6]) {
@@ -107,56 +200,13 @@ class Divide extends Eq {
   }
 
   @override
-  bool hasVariable(Variable v) => expressions.any((e) => e.hasVariable(v));
-
-  @override
-  (C, Eq) separateConstant() {
-    // TODO improve this
-    return (C(1.0), this);
-  }
-
-  @override
-  Eq expandMultiplications() =>
-      Divide(expressions.map((e) => e.expandMultiplications()).toList());
-
-  @override
-  Eq simplifyPowers() =>
-      Divide(expressions.map((e) => e.simplifyPowers()).toList());
-
-  Eq get numerator => expressions.first;
-
-  Eq get denominator =>
-      expressions.length == 1 ? C(1.0) : Times(expressions.skip(1).toList());
-
-  @override
-  Eq expandDivisions() {
-    final numerator = this.numerator.expandDivisions();
-    if (expressions.length == 1) {
-      return numerator;
-    }
-    if (numerator is! Plus) {
-      return this;
-    }
-    final denominator = this.denominator.expandDivisions();
-    final ret = <Eq>[];
-    for (final part in numerator.expressions) {
-      ret.add(Divide([part, denominator]));
-    }
-    return Plus(ret);
-  }
-
-  @override
-  Eq simplifyMultiplications() =>
-      Divide(expressions.map((e) => e.simplifyMultiplications()).toList());
-
-  @override
   String toString() {
     final parts = <String>[];
     for (final e in expressions) {
       if (e is Value) {
         parts.add(e.toString());
         continue;
-      } else if (e is UnaryMinus) {
+      } else if (e is Minus) {
         if (e.expression is Value) {
           parts.add('-${e.expression.toString()}');
           continue;
@@ -169,3 +219,4 @@ class Divide extends Eq {
     return parts.join(' / ');
   }
 }
+ */

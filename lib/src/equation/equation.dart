@@ -1,12 +1,15 @@
-import 'divide.dart';
-import 'plus.dart';
+import 'addition.dart';
+import 'constant.dart';
+import 'minus.dart';
 import 'power.dart';
 import 'times.dart';
 import 'variable.dart';
 
+export 'addition.dart';
+export 'constant.dart';
 export 'divide.dart';
 export 'imaginary.dart';
-export 'plus.dart';
+export 'minus.dart';
 export 'power.dart';
 export 'times.dart';
 export 'trignometric.dart';
@@ -29,7 +32,7 @@ abstract class Eq {
   factory Eq.from(dynamic v) {
     if (v is Eq) return v;
     if (v is String) return Variable(v);
-    if (v is double) return C(v);
+    if (v is double) return Constant(v);
     throw ArgumentError('cannot create expression from ${v.runtimeType}');
   }
 
@@ -43,13 +46,16 @@ abstract class Eq {
   Times operator *(Eq exp) => Times([this, exp]);
 
   /// Divide operator. Creates a [Divide] expression.
-  Divide operator /(Eq exp) => Divide([this, exp]);
+  Times operator /(Eq exp) => Times([
+    this,
+    Power([exp, Minus(Constant(1))]),
+  ]);
 
   /// Power operator. Creates a [Power] expression.
   Power pow(Eq exp) => Power([this, exp]);
 
-  /// Unary minus operator. Creates a [UnaryMinus] expression.
-  UnaryMinus operator -() => UnaryMinus(this);
+  /// Unary minus operator. Creates a [Minus] expression.
+  Minus operator -() => Minus(this);
 
   Eq substitute(Map<String, Eq> substitutions);
 
@@ -57,28 +63,56 @@ abstract class Eq {
 
   bool isSame(Eq other, [double epsilon = 1e-6]);
 
+  bool hasVariable(Variable v) => false;
+
   bool isConstant() => toConstant() != null;
 
   double? toConstant() {
     var s = simplify();
-    if (s is C) return s.value;
-    if (s is UnaryMinus) return s.toConstant();
+    if (s is Constant) return s.value;
+    if (s is Minus) return s.toConstant();
     return null;
   }
 
-  bool hasVariable(Variable v) => false;
+  Eq withConstant(double c) {
+    if (c.abs() < 1e-6) {
+      return Constant(0);
+    }
+    if ((c.abs() - 1).abs() < 1e-6) {
+      return c.isNegative ? Minus(this) : this;
+    }
+    return c.isNegative
+        ? Minus(Times([Constant(-c), this]))
+        : Times([Constant(c), this]);
+  }
 
-  (C, Eq) separateConstant() => (C(1), this);
+  (double, Eq) separateConstant() => (1, this);
 
-  Eq expandPlus() => this;
-
+  /// (x + 5) * (x + 8) = x^2 + 13x + 40
   Eq expandMultiplications();
 
-  Eq expandDivisions();
+  /// x + (1 + y) - (2 + y) = x - y - 1
+  Eq combineAddition();
 
-  Eq simplifyPowers();
+  Eq factorOutMinus();
 
-  Eq simplifyMultiplications();
+  /// -(x + y) = -x - y
+  Eq distributeMinus();
+
+  /// -(-x) = x
+  Eq dissolveMinus();
+
+  Eq simplifyDivisionOfAddition();
+
+  /// ((x * y)/z) ** 2 = x**2 * y**2 / z**2
+  Eq distributeExponent();
+
+  /// x * x = x**2
+  Eq combineMultiplicationsAndPowers();
+
+  Eq factorOutAddition();
+
+  bool get isLone;
 
   Quadratic asQuadratic(Variable x) {
     // TODO handle other types
@@ -86,16 +120,16 @@ abstract class Eq {
     if (simplified is! Plus) {
       throw UnimplementedError();
     }
-    Eq a = C(0);
-    Eq b = C(0);
-    Eq c = C(0);
+    Eq a = Constant(0);
+    Eq b = Constant(0);
+    Eq c = Constant(0);
 
     for (var term in simplified.expressions) {
       if (!term.hasVariable(x)) {
         c += term;
         continue;
       }
-      var tmp = (term / x.pow(C(2))).simplify();
+      var tmp = (term / x.pow(Constant(2))).simplify();
       if (!tmp.hasVariable(x)) {
         a += tmp;
         continue;
@@ -111,6 +145,8 @@ abstract class Eq {
     return Quadratic(a, b, c);
   }
 
+  /*
+  // TODO handle negatives properly
   static Eq addTerms(Eq a, Eq b) {
     a = a.simplify();
     b = b.simplify();
@@ -121,161 +157,24 @@ abstract class Eq {
     if (!aSimplified.isSame(bSimplified)) {
       return Plus([aSimplified, bSimplified]);
     }
-    if (aSimplified is C) {
-      return C((aC.value + bC.value) * aSimplified.value).simplify();
-    } else if (aSimplified is UnaryMinus) {
+    if (aSimplified is Constant) {
+      return Constant((aC + bC) * aSimplified.value).simplify();
+    } else if (aSimplified is Minus) {
       final v = aSimplified.expression;
-      if (v is C) {
-        return UnaryMinus(C((aC.value + bC.value) * v.value)).simplify();
+      if (v is Constant) {
+        return Minus(Constant((aC + bC) * v.value)).simplify();
       }
     }
-    return Times([(aC + bC).simplify(), aSimplified]);
+    return Times([Constant(aC + bC), aSimplified]);
   }
+   */
 
-  static Eq? tryAddTerms(Eq a, Eq b) {
-    a = a.simplify();
-    b = b.simplify();
+  static Constant c(double value) => Constant(value);
 
-    var (aC, aSimplified) = a.separateConstant();
-    var (bC, bSimplified) = b.separateConstant();
-
-    if (!aSimplified.isSame(bSimplified)) {
-      return null;
-    }
-    if (aSimplified is C) {
-      return C((aC.value + bC.value) * aSimplified.value).simplify();
-    } else if (aSimplified is UnaryMinus) {
-      final v = aSimplified.expression;
-      if (v is C) {
-        return UnaryMinus(C((aC.value + bC.value) * v.value)).simplify();
-      }
-    }
-    return Times([(aC + bC).simplify(), aSimplified]);
-  }
+  static Variable v(String name) => Variable(name);
 }
 
 abstract class Value extends Eq {}
-
-class C extends Eq implements Value {
-  final double value;
-
-  C(this.value);
-
-  @override
-  Eq substitute(Map<String, Eq> substitutions) => this;
-
-  @override
-  Eq simplify() {
-    if (value.isNegative) {
-      return UnaryMinus(C(-value));
-    }
-    return this;
-  }
-
-  @override
-  bool isSame(Eq other, [double epsilon = 1e-6]) =>
-      other is C && (other.value - value).abs() < epsilon;
-
-  @override
-  bool isConstant() => true;
-
-  @override
-  double toConstant() => value;
-
-  @override
-  bool hasVariable(Variable v) => false;
-
-  @override
-  (C, Eq) separateConstant() => (this, C(1));
-
-  @override
-  Eq expandMultiplications() => this;
-
-  @override
-  Eq simplifyPowers() => this;
-
-  @override
-  Eq expandDivisions() => this;
-
-  @override
-  Eq simplifyMultiplications() => this;
-
-  @override
-  String toString() => value.stringMaybeInt;
-}
-
-class UnaryMinus extends Eq {
-  final Eq expression;
-
-  UnaryMinus(this.expression);
-
-  @override
-  Eq substitute(Map<String, Eq> substitutions) =>
-      UnaryMinus(expression.substitute(substitutions));
-
-  @override
-  Eq simplify() {
-    var inner = expression.simplify();
-    if (inner is UnaryMinus) {
-      return inner.expression;
-    }
-    return UnaryMinus(inner);
-  }
-
-  @override
-  bool isSame(Eq other, [double epsilon = 1e-6]) {
-    other = other.simplify();
-    if (other is! UnaryMinus) {
-      // TODO other is Plus
-      // TODO exp is Plus
-      return false;
-    }
-    return expression.isSame(other.expression, epsilon);
-  }
-
-  @override
-  double? toConstant() {
-    final v = expression.simplify();
-    if (v is! C) return null;
-    return -v.value;
-  }
-
-  @override
-  bool hasVariable(Variable v) => expression.hasVariable(v);
-
-  @override
-  (C, Eq) separateConstant() {
-    final (c, ne) = expression.separateConstant();
-    return (C(-c.value), ne);
-  }
-
-  @override
-  Eq expandMultiplications() => UnaryMinus(expression.expandMultiplications());
-
-  @override
-  Eq simplifyPowers() => UnaryMinus(expression.simplifyPowers());
-
-  @override
-  Eq expandDivisions() => UnaryMinus(expression.expandDivisions());
-
-  @override
-  Eq simplifyMultiplications() =>
-      UnaryMinus(expression.simplifyMultiplications());
-
-  @override
-  String toString() {
-    final exp = expression;
-    if (exp is C) {
-      if (exp.value.isNegative) {
-        return exp.toString();
-      }
-      return '-$exp';
-    } else if (exp is Variable) {
-      return '-$exp';
-    }
-    return '-($expression)';
-  }
-}
 
 extension DoubleExt on double {
   bool get isInt => (this - round()).abs() < 1e-8;

@@ -10,12 +10,12 @@ class _Test {
   _Test(this.eq, this.res);
 
   static List<_Test> cases = [
-    _Test(C(220) / C(120) / C(64) / C(54), C(0.00053047839)),
+    _Test(Constant(220) / Constant(120) / Constant(64) / Constant(54), Constant(0.00053047839)),
     _Test(x / y / z, x / (y * z)),
-    _Test(x / C(1), x),
+    _Test(x / Constant(1), x),
   ];
 
-  static List<_Test> nans = [_Test(x / C(0), C(double.nan))];
+  static List<_Test> nans = [_Test(x / Constant(0), Constant(double.nan))];
 }
 
 void main() {

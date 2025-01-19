@@ -30,7 +30,7 @@ class EqIsNanMatcher extends Matcher {
 
   @override
   bool matches(other, Map<dynamic, dynamic> matchState) {
-    if (other is! C) return false;
+    if (other is! Constant) return false;
     return other.value.isNaN;
   }
 }

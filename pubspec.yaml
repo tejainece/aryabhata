@@ -1,7 +1,7 @@
 name: equation
-description: A starting point for Dart libraries or applications.
+description: Dart library to build, simplify, manipulate and solve mathematical equations.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/tejainece/equation
 
 environment:
   sdk: ^3.7.0-209.1.beta
@@ -13,3 +13,7 @@ dependencies:
 dev_dependencies:
   lints: ^5.0.0
   test: ^1.24.0
+
+dependency_overrides:
+  number_factorization:
+    path: ../number_factorization
