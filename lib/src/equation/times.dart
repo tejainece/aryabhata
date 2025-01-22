@@ -23,32 +23,7 @@ class Times extends Eq {
   Eq simplify() {
     return Times(
       expressions.map((e) => e.simplify()).toList(),
-    ).combineMultiplicationsAndPowers();
-    /*double c = 1;
-    final ret = <Eq>[];
-    for (final e in expressions) {
-      final (ec, eeq) = e.simplify().separateConstant();
-      if (ec.abs() < 1e-6) return Constant(0);
-      c *= ec;
-      if (eeq is Constant) {
-        // Do nothing
-      } else if (eeq is Times) {
-        ret.addAll(eeq.expressions);
-      } else {
-        ret.add(eeq);
-      }
-    }
-    if (c.abs() < 1e-6) return Constant(0.0);
-    // Detect powers
-    // TODO detect real powers, hidden powers
-    if (ret.isEmpty) return Constant(c).dissolveMinus();
-    Eq eq = Times(ret).combineMultiplicationsAndPowers();
-    if ((c.abs() - 1).abs() < 1e-6) {
-      return c.isNegative ? Minus(eq) : eq;
-    }
-    return c.isNegative
-        ? Minus(Times([Constant(c), eq]))
-        : Times([Constant(c), eq]);*/
+    ).combinePowers().combineMultiplications();
   }
 
   @override
@@ -76,6 +51,28 @@ class Times extends Eq {
   }
 
   @override
+  Eq dissolveMinus() {
+    bool isMinus = false;
+    final ret = <Eq>[];
+    for (var e in expressions) {
+      e = e.dissolveMinus();
+      if (e is Minus) {
+        isMinus = !isMinus;
+        ret.add(e.expression);
+      } else {
+        ret.add(e);
+      }
+    }
+    if (isMinus) {
+      return Minus(Times(ret));
+    }
+    return Times(ret);
+  }
+
+  @override
+  Eq distributeMinus() => dissolveMinus().distributeMinus();
+
+  @override
   Eq factorOutMinus() {
     final ret = expressions.map((e) => e.factorOutMinus()).toList();
     bool isMinus = false;
@@ -93,12 +90,16 @@ class Times extends Eq {
   }
 
   @override
-  Eq combineAddition() =>
-      Times(expressions.map((e) => e.combineAddition()).toList());
+  Eq combineAddition() => Times(expressions.map((e) => e.combineAddition()));
 
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
   @override
-  Eq expandMultiplications() {
+  Eq expandMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+
     Plus ret = Plus([expressions.first]);
     for (final e in expressions.skip(1)) {
       ret = ret.expandingMultiply(e);
@@ -110,18 +111,34 @@ class Times extends Eq {
   }
 
   @override
-  Eq distributeExponent() =>
-      Times(expressions.map((e) => e.distributeExponent()).toList());
+  Eq distributeExponent({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Times(expressions.map((e) => e.distributeExponent(depth: depth)));
+  }
 
   @override
-  Eq simplifyDivisionOfAddition() =>
-      Times(expressions.map((e) => e.simplifyDivisionOfAddition()).toList());
+  Eq simplifyDivisionOfAddition({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Times(
+      expressions.map((e) => e.simplifyDivisionOfAddition(depth: depth)),
+    );
+  }
 
   @override
-  Eq combineMultiplicationsAndPowers() {
+  Eq combineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
     final (c, eq) = separateConstant();
     if (eq is! Times) {
-      return eq.combineMultiplicationsAndPowers().withConstant(c);
+      return eq.combineMultiplications(depth: depth).withConstant(c);
     }
     final ret = eq.expressions.toList();
     for (int i = 0; i < ret.length; i++) {
@@ -136,7 +153,7 @@ class Times extends Eq {
         j--;
       }
       if (n > 1) {
-        ret[i] = Power([ret[i], Constant(n.toDouble())]);
+        ret[i] = Power(ret[i], Constant(n.toDouble()));
       }
     }
     if (ret.isEmpty) {
@@ -149,15 +166,77 @@ class Times extends Eq {
   }
 
   @override
+  Eq combinePowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    final ret = expressions.toList();
+    for (int i = 0; i < ret.length; i++) {
+      final a = ret[i];
+      if (a is! Power) continue;
+      final e = a.exponent;
+      for (int j = i + 1; j < ret.length; j++) {
+        final b = ret[j];
+        if (b is! Power) continue;
+        if (!b.exponent.isSame(e)) continue;
+        ret[i] = Power(Times([a.base, b.base]), e);
+        ret.removeAt(j);
+        j--;
+      }
+    }
+    if (ret.isEmpty) {
+      return Constant(1);
+    } else if (ret.length == 1) {
+      return ret[0];
+    } else {
+      return Times(ret);
+    }
+  }
+
+  @override
   Eq factorOutAddition() =>
-      Times(expressions.map((e) => e.factorOutAddition()).toList());
+      Times(expressions.map((e) => e.factorOutAddition()));
+
+  @override
+  List<Eq> multiplicativeTerms() => expressions.toList();
+
+  @override
+  Eq? tryCancelDivision(Eq other) {
+    assert(other.isSingle);
+    final ret = expressions.toList();
+    for (int i = 0; i < ret.length; i++) {
+      final v = ret[i];
+      final d = v.tryCancelDivision(other);
+      if (d == null) continue;
+      if (!d.isSame(one)) {
+        ret[i] = d;
+      } else {
+        ret.removeAt(i);
+      }
+      return Times(ret);
+    }
+    return null;
+  }
+
+  @override
+  bool get isSingle => false;
+
+  @override
+  bool get isLone {
+    if (expressions.length == 1) {
+      return expressions[0].isLone;
+    }
+    // return expressions.every((e) => e.isLone);
+    return false;
+  }
 
   @override
   bool hasVariable(Variable v) => expressions.any((e) => e.hasVariable(v));
 
   @override
   Eq substitute(Map<String, Eq> substitutions) =>
-      Times(expressions.map((e) => e.substitute(substitutions)).toList());
+      Times(expressions.map((e) => e.substitute(substitutions)));
 
   @override
   bool isSame(Eq otherSimplified, [double epsilon = 1e-6]) {
@@ -187,36 +266,14 @@ class Times extends Eq {
     return true;
   }
 
-  @override
-  Eq dissolveMinus() {
-    bool isMinus = false;
-    final ret = <Eq>[];
-    for (var e in expressions) {
-      e = e.dissolveMinus();
-      if (e is Minus) {
-        isMinus = !isMinus;
-        ret.add(e.expression);
-      } else {
-        ret.add(e);
-      }
-    }
-    if (isMinus) {
-      return Minus(Times(ret));
-    }
-    return Times(ret);
-  }
-
-  @override
-  Eq distributeMinus() => dissolveMinus().distributeMinus();
-
   // TODO only bracket when necessary
   @override
-  String toString() {
+  String toString({bool paren = false}) {
     final numerators = <Eq>[];
     final denominators = <Eq>[];
     for (final e in expressions) {
       if (e is Power) {
-        final div = e.toDivide;
+        final div = e.toDenominator;
         if (div != null) {
           denominators.add(div);
           continue;
@@ -229,30 +286,30 @@ class Times extends Eq {
     if (Times(numerators).isLone) {
       sb.write(numerators.join('*'));
     } else {
-      sb.write('(');
+      if (!paren) sb.write('(');
       sb.write(numerators.join('*'));
-      sb.write(')');
+      if (!paren) sb.write(')');
     }
-
     if (denominators.isNotEmpty) {
       sb.write('/');
-      if (Times(denominators).isLone &&
-          Times(denominators).expressions.length == 1) {
+      if (Times(denominators).isLone) {
         sb.write(denominators.join('*'));
       } else {
         sb.write('(');
-        sb.write(denominators.join('*'));
+        for (int i = 0; i < denominators.length; i++) {
+          final d = denominators[i];
+          if (d is! Times) {
+            sb.write(d);
+          } else {
+            sb.write(d.toString(paren: true));
+          }
+          if (i < denominators.length - 1) {
+            sb.write('*');
+          }
+        }
         sb.write(')');
       }
     }
     return sb.toString();
-  }
-
-  @override
-  bool get isLone {
-    if (expressions.length == 1) {
-      return expressions[0].isLone;
-    }
-    return expressions.every((e) => e.isLone);
   }
 }

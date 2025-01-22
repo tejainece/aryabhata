@@ -7,7 +7,6 @@ import 'variable.dart';
 
 export 'addition.dart';
 export 'constant.dart';
-export 'divide.dart';
 export 'imaginary.dart';
 export 'minus.dart';
 export 'power.dart';
@@ -46,24 +45,19 @@ abstract class Eq {
   Times operator *(Eq exp) => Times([this, exp]);
 
   /// Divide operator. Creates a [Divide] expression.
-  Times operator /(Eq exp) => Times([
-    this,
-    Power([exp, Minus(Constant(1))]),
-  ]);
+  // TODO
+  Times operator /(Eq exp) => Times([this, Power(exp, Minus(Constant(1)))]);
 
   /// Power operator. Creates a [Power] expression.
-  Power pow(Eq exp) => Power([this, exp]);
+  Power lpow(Eq exp) => Power.left(this, exp);
+
+  /// Power operator. Creates a [Power] expression.
+  Power pow(Eq exp) => Power.right(this, exp);
 
   /// Unary minus operator. Creates a [Minus] expression.
   Minus operator -() => Minus(this);
 
-  Eq substitute(Map<String, Eq> substitutions);
-
   Eq simplify();
-
-  bool isSame(Eq other, [double epsilon = 1e-6]);
-
-  bool hasVariable(Variable v) => false;
 
   bool isConstant() => toConstant() != null;
 
@@ -86,10 +80,10 @@ abstract class Eq {
         : Times([Constant(c), this]);
   }
 
-  (double, Eq) separateConstant() => (1, this);
+  (double, Eq) separateConstant();
 
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
-  Eq expandMultiplications();
+  Eq expandMultiplications({int? depth});
 
   /// x + (1 + y) - (2 + y) = x - y - 1
   Eq combineAddition();
@@ -102,17 +96,35 @@ abstract class Eq {
   /// -(-x) = x
   Eq dissolveMinus();
 
-  Eq simplifyDivisionOfAddition();
+  Eq simplifyDivisionOfAddition({int? depth});
 
   /// ((x * y)/z) ** 2 = x**2 * y**2 / z**2
-  Eq distributeExponent();
+  Eq distributeExponent({int? depth});
 
   /// x * x = x**2
-  Eq combineMultiplicationsAndPowers();
+  Eq combineMultiplications({int? depth});
+
+  /// x ^ 2 * y ^ 2 = (x * y) ^ 2
+  Eq combinePowers({int? depth});
 
   Eq factorOutAddition();
 
+  List<Eq> multiplicativeTerms();
+
+  Eq? tryCancelDivision(Eq other);
+
   bool get isLone;
+
+  bool get isSingle;
+
+  bool hasVariable(Variable v);
+
+  bool isSame(Eq other, [double epsilon = 1e-6]);
+
+  Eq substitute(Map<String, Eq> substitutions);
+
+  @override
+  String toString();
 
   Quadratic asQuadratic(Variable x) {
     // TODO handle other types
@@ -177,7 +189,11 @@ abstract class Eq {
 abstract class Value extends Eq {}
 
 extension DoubleExt on double {
-  bool get isInt => (this - round()).abs() < 1e-8;
+  bool get isInt {
+    if(isInfinite) return false;
+    if(isNaN) return false;
+    return (this - round()).abs() < 1e-8;
+  }
 
   String get stringMaybeInt => isInt ? round().toString() : toString();
 }

@@ -46,6 +46,9 @@ class Minus extends Eq {
   }
 
   @override
+  List<Eq> multiplicativeTerms() => [this];
+
+  @override
   Eq distributeMinus() {
     var eq = dissolveMinus();
     if (eq is! Minus) {
@@ -87,21 +90,27 @@ class Minus extends Eq {
   Eq combineAddition() => Minus(expression.combineAddition());
 
   @override
-  Eq expandMultiplications() => Minus(expression.expandMultiplications());
+  Eq expandMultiplications({int? depth}) =>
+      Minus(expression.expandMultiplications(depth: depth));
 
   @override
-  Eq distributeExponent() => Minus(expression.distributeExponent());
+  Eq distributeExponent({int? depth}) =>
+      Minus(expression.distributeExponent(depth: depth));
 
   @override
-  Eq simplifyDivisionOfAddition() =>
-      Minus(expression.simplifyDivisionOfAddition());
+  Eq simplifyDivisionOfAddition({int? depth}) =>
+      Minus(expression.simplifyDivisionOfAddition(depth: depth));
 
   @override
-  Eq combineMultiplicationsAndPowers() =>
-      Minus(expression.combineMultiplicationsAndPowers());
+  Eq combineMultiplications({int? depth}) =>
+      Minus(expression.combineMultiplications());
 
   @override
-  Eq factorOutAddition() => Minus(expression.factorOutAddition());
+  Eq combinePowers({int? depth}) => Minus(expression.combinePowers());
+
+  @override
+  Eq factorOutAddition() =>
+      Minus(expression.factorOutAddition()).dissolveMinus();
 
   @override
   Eq withConstant(double c) {
@@ -110,11 +119,23 @@ class Minus extends Eq {
   }
 
   @override
-  Eq substitute(Map<String, Eq> substitutions) =>
-      Minus(expression.substitute(substitutions));
+  bool hasVariable(Variable v) => expression.hasVariable(v);
 
   @override
-  bool hasVariable(Variable v) => expression.hasVariable(v);
+  Eq? tryCancelDivision(Eq other) {
+    // TODO: implement tryDivide
+    throw UnimplementedError();
+  }
+
+  @override
+  bool get isSingle => false;
+
+  @override
+  bool get isLone => expression.isLone;
+
+  @override
+  Eq substitute(Map<String, Eq> substitutions) =>
+      Minus(expression.substitute(substitutions));
 
   @override
   bool isSame(Eq other, [double epsilon = 1e-6]) {
@@ -140,7 +161,4 @@ class Minus extends Eq {
     }
     return '-($expression)';
   }
-
-  @override
-  bool get isLone => expression.isLone;
 }

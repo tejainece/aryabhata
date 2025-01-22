@@ -4,7 +4,22 @@ import 'package:equation/equation.dart';
 
 abstract class Trig extends Eq {
   @override
+  (double, Eq) separateConstant() => (1, this);
+
+  @override
+  List<Eq> multiplicativeTerms() => [this];
+
+  @override
   bool get isLone => true;
+
+  @override
+  bool get isSingle => true;
+
+  @override
+  Eq? tryCancelDivision(Eq other) {
+    assert(other.isSingle);
+    return isSame(other) ? Constant(1.0) : null;
+  }
 }
 
 class Cos extends Trig {
@@ -62,17 +77,49 @@ class Cos extends Trig {
   Eq combineAddition() => Cos(exp.combineAddition());
 
   @override
-  Eq expandMultiplications() => Cos(exp.expandMultiplications());
+  Eq expandMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Cos(exp.expandMultiplications(depth: depth));
+  }
 
   @override
-  Eq distributeExponent() => Cos(exp.distributeExponent());
+  Eq distributeExponent({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Cos(exp.distributeExponent(depth: depth));
+  }
 
   @override
-  Eq simplifyDivisionOfAddition() => Cos(exp.simplifyDivisionOfAddition());
+  Eq simplifyDivisionOfAddition({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Cos(exp.simplifyDivisionOfAddition(depth: depth));
+  }
 
   @override
-  Eq combineMultiplicationsAndPowers() =>
-      Cos(exp.combineMultiplicationsAndPowers());
+  Eq combineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Cos(exp.combineMultiplications(depth: depth));
+  }
+
+  @override
+  Eq combinePowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Cos(exp.combinePowers(depth: depth));
+  }
 
   @override
   Eq factorOutAddition() => Cos(exp.factorOutAddition());
@@ -156,17 +203,49 @@ class Sin extends Trig {
   }
 
   @override
-  Eq expandMultiplications() => Sin(exp.expandMultiplications());
+  Eq expandMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Sin(exp.expandMultiplications(depth: depth));
+  }
 
   @override
-  Eq distributeExponent() => Sin(exp.distributeExponent());
+  Eq combinePowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Sin(exp.combinePowers(depth: depth));
+  }
 
   @override
-  Eq simplifyDivisionOfAddition() => Sin(exp.simplifyDivisionOfAddition());
+  Eq distributeExponent({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Sin(exp.distributeExponent(depth: depth));
+  }
 
   @override
-  Eq combineMultiplicationsAndPowers() =>
-      Sin(exp.combineMultiplicationsAndPowers());
+  Eq simplifyDivisionOfAddition({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Sin(exp.simplifyDivisionOfAddition(depth: depth));
+  }
+
+  @override
+  Eq combineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Sin(exp.combineMultiplications(depth: depth));
+  }
 
   @override
   Eq factorOutAddition() => Sin(exp.factorOutAddition());
@@ -250,17 +329,49 @@ class Tan extends Trig {
   }
 
   @override
-  Eq expandMultiplications() => Tan(exp.expandMultiplications());
+  Eq expandMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Tan(exp.expandMultiplications(depth: depth));
+  }
 
   @override
-  Eq distributeExponent() => Tan(exp.distributeExponent());
+  Eq distributeExponent({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Tan(exp.distributeExponent(depth: depth));
+  }
 
   @override
-  Eq simplifyDivisionOfAddition() => Tan(exp.simplifyDivisionOfAddition());
+  Eq simplifyDivisionOfAddition({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Tan(exp.simplifyDivisionOfAddition(depth: depth));
+  }
 
   @override
-  Eq combineMultiplicationsAndPowers() =>
-      Tan(exp.combineMultiplicationsAndPowers());
+  Eq combineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Tan(exp.combineMultiplications(depth: depth));
+  }
+
+  @override
+  Eq combinePowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Tan(exp.combinePowers(depth: depth));
+  }
 
   @override
   Eq factorOutAddition() => Tan(exp.factorOutAddition());

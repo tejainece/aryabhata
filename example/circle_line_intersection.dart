@@ -5,10 +5,15 @@ void main() {
   line = (line as Plus).equationOf(y);
   print(line);
 
-  Eq circle = (x - h).pow(Constant(2)) - (y - k).pow(Constant(2)) - r.pow(Constant(2));
+  Eq circle =
+      (x - h).pow(Constant(2)) - (y - k).pow(Constant(2)) - r.pow(Constant(2));
   print(circle);
   print('Expand multiplications');
-  circle = circle.expandMultiplications().combineAddition();
+  circle =
+      circle
+          .expandMultiplications()
+          .combineAddition()
+          .combineMultiplications();
   print(circle);
 
   print('substituting y');

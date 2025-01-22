@@ -3,15 +3,15 @@ import 'package:test/test.dart';
 
 import '../../testing.dart';
 
-class _AddTermsTest {
+class _Test {
   final Eq eq;
   final Eq res;
 
-  _AddTermsTest(this.eq, this.res);
+  _Test(this.eq, this.res);
 
   static final cases = [
-    _AddTermsTest(-h * -h, h.pow(Constant(2))),
-    _AddTermsTest(
+    _Test(-h * -h, h.pow(Constant(2))),
+    _Test(
       -(Constant(2) * ((Constant(4) * a * x * c) / (Constant(2) * b.pow(Constant(2))))),
       -((Constant(8) * a * x * c) / (Constant(2) * (b.pow(Constant(2))))),
     ),
@@ -21,7 +21,7 @@ class _AddTermsTest {
 void main() {
   group('Times.simplify', () {
     test('test', () {
-      for (final test in _AddTermsTest.cases) {
+      for (final test in _Test.cases) {
         final res = test.eq.simplify();
         expect(res, EqEqualityMatcher(test.res));
       }

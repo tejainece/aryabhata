@@ -14,6 +14,9 @@ class Variable extends Eq implements Value {
   Eq simplify() => this;
 
   @override
+  (double, Eq) separateConstant() => (1, this);
+
+  @override
   bool isConstant() => false;
 
   @override
@@ -26,27 +29,50 @@ class Variable extends Eq implements Value {
   double? toConstant() => null;
 
   @override
-  Eq expandMultiplications() => this;
+  Eq expandMultiplications({int? depth}) => this;
 
   @override
-  Eq distributeExponent() => this;
+  Eq distributeExponent({int? depth}) => this;
 
   @override
-  Eq simplifyDivisionOfAddition() => this;
+  Eq simplifyDivisionOfAddition({int? depth}) => this;
 
   @override
-  Eq combineMultiplicationsAndPowers() => this;
+  Eq combineMultiplications({int? depth}) => this;
+
+  @override
+  Eq combinePowers({int? depth}) => this;
 
   @override
   Eq factorOutAddition() => this;
 
   @override
+  List<Eq> multiplicativeTerms() => [this];
+
+  @override
+  Eq dissolveMinus() => this;
+
+  @override
+  Eq distributeMinus() => this;
+
+  @override
+  Eq? tryCancelDivision(Eq other) {
+    assert(other.isSingle);
+    if (other is! Variable) return null;
+    return other.name == name ? Constant(1.0) : null;
+  }
+
+  @override
+  bool get isLone => true;
+
+  @override
+  bool get isSingle => true;
+
+  @override
   bool hasVariable(Variable v) => v.name == name;
 
   @override
-  Eq substitute(Map<String, Eq> substitutions) {
-    return substitutions[name] ?? this;
-  }
+  Eq substitute(Map<String, Eq> substitutions) => substitutions[name] ?? this;
 
   @override
   bool isSame(Eq other, [double epsilon = 1e-6]) =>
@@ -63,15 +89,6 @@ class Variable extends Eq implements Value {
       }
     }
   }
-
-  @override
-  Eq dissolveMinus() => this;
-
-  @override
-  Eq distributeMinus() => this;
-
-  @override
-  bool get isLone => true;
 }
 
 const a = Variable._('a');

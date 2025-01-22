@@ -1,11 +1,9 @@
-
-
 import 'package:equation/equation.dart';
 
 class Constant extends Eq implements Value {
   final double value;
 
-  Constant(this.value);
+  const Constant(this.value);
 
   @override
   Eq simplify() {
@@ -37,19 +35,39 @@ class Constant extends Eq implements Value {
   Eq combineAddition() => this;
 
   @override
-  Eq expandMultiplications() => this;
+  Eq expandMultiplications({int? depth}) => this;
 
   @override
-  Eq distributeExponent() => this;
+  Eq distributeExponent({int? depth}) => this;
 
   @override
-  Eq simplifyDivisionOfAddition() => this;
+  Eq simplifyDivisionOfAddition({int? depth}) => this;
 
   @override
-  Eq combineMultiplicationsAndPowers() => this;
+  Eq combineMultiplications({int? depth}) => this;
+
+  @override
+  Eq combinePowers({int? depth}) => this;
 
   @override
   Eq factorOutAddition() => this;
+
+  @override
+  List<Eq> multiplicativeTerms() => [this];
+
+  @override
+  Eq? tryCancelDivision(Eq other) {
+    assert(other.isSingle);
+    if (other is Constant) {
+      final res = value / other.value;
+      if (!res.isInt) return null;
+      return Constant(res);
+    }
+    return null;
+  }
+
+  @override
+  bool get isSingle => true;
 
   @override
   Eq substitute(Map<String, Eq> substitutions) => this;
@@ -58,8 +76,13 @@ class Constant extends Eq implements Value {
   bool hasVariable(Variable v) => false;
 
   @override
-  bool isSame(Eq other, [double epsilon = 1e-6]) =>
-      other is Constant && (other.value - value).abs() < epsilon;
+  bool isSame(Eq other, [double epsilon = 1e-6]) {
+    final oc = other.simplify().toConstant();
+    if (oc == null) return false;
+    if (oc.isNaN || value.isNaN) return false;
+    if (value == oc) return true;
+    return (oc - value).abs() < epsilon;
+  }
 
   @override
   String toString() => value.stringMaybeInt;
@@ -73,3 +96,7 @@ class Constant extends Eq implements Value {
   @override
   bool get isLone => true;
 }
+
+const zero = Constant(0);
+
+const one = Constant(1);

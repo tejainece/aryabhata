@@ -26,7 +26,7 @@ void main() {
   group('Times.combineMultiplications', () {
     test('test', () {
       for (final tc in _TestCase.cases) {
-        final res = tc.eq.combineMultiplicationsAndPowers();
+        final res = tc.eq.combineMultiplications();
         expect(res, EqEqualityMatcher(tc.res));
       }
     });

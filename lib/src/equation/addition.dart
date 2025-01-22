@@ -20,12 +20,20 @@ class Plus extends Eq {
 
   @override
   Eq substitute(Map<String, Eq> substitutions) {
-    return Plus(expressions.map((e) => e.substitute(substitutions)).toList());
+    return Plus(expressions.map((e) => e.substitute(substitutions)));
   }
 
   @override
-  Eq simplify() =>
-      Plus(expressions.map((e) => e.simplify()).toList()).combineAddition();
+  Eq simplify() => Plus(expressions.map((e) => e.simplify())).combineAddition();
+
+  @override
+  Eq factorOutMinus() => Plus(expressions.map((e) => e.factorOutMinus()));
+
+  @override
+  Eq dissolveMinus() => Plus(expressions.map((e) => e.dissolveMinus()));
+
+  @override
+  Eq distributeMinus() => Plus(expressions.map((e) => e.distributeMinus()));
 
   @override
   Eq combineAddition() {
@@ -63,18 +71,52 @@ class Plus extends Eq {
   }
 
   @override
+  List<Eq> multiplicativeTerms() => [this];
+
+  @override
   Eq factorOutAddition() {
-    throw UnimplementedError();
-    /*
-    final (c, eq) = separateConstant();
-
-    // TODO
-
-    if (c == 1) {
-      return eq;
+    final factors = <Eq>[];
+    var ret = expressions.toList();
+    final terms = expressions.first.multiplicativeTerms();
+    for (final t in terms) {
+      if(t is Constant && t.value.isInt) {
+        int c = t.value.round().abs();
+        middle:
+        while (true) {
+          final facs = integerFactorization(c).where((e) => e != 1);
+          for (final f in facs) {
+            final tmp = tryFactorizeBy(Eq.c(f.toDouble()), ret);
+            if (tmp == null) continue;
+            factors.add(Eq.c(f.toDouble()));
+            ret = tmp;
+            c = (c / f).round();
+            continue middle;
+          }
+          break;
+        }
+        continue;
+      }
+      final tmp = tryFactorizeBy(t, ret);
+      if(tmp == null) continue;
+      factors.add(t);
+      ret = tmp;
     }
-    return Times([c, eq]);
-    */
+    if (factors.isEmpty) {
+      return this;
+    }
+    return Times([...factors, Plus(ret)]);
+  }
+
+  static List<Eq>? tryFactorizeBy(Eq factor, List<Eq> eq) {
+    // assert(factor.isSingle);
+
+    final ret = <Eq>[];
+    for(int i = 0; i < eq.length; i++) {
+      final d = eq[i].tryCancelDivision(factor);
+      if (d == null) return null;
+      ret.add(d);
+    }
+    return ret;
   }
 
   Plus expandingMultiply(Eq s) {
@@ -145,28 +187,81 @@ class Plus extends Eq {
     }
     return (
       gcd,
-      Plus(
-        separated.map((e) => (Constant(e.$1 / gcd) * e.$2).simplify()).toList(),
-      ),
+      Plus(separated.map((e) => (Constant(e.$1 / gcd) * e.$2).simplify())),
     );
   }
 
   @override
-  Eq expandMultiplications() =>
-      Plus(expressions.map((e) => e.expandMultiplications()).toList());
+  Eq expandMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Plus(expressions.map((e) => e.expandMultiplications(depth: depth)));
+  }
 
   @override
-  Eq distributeExponent() =>
-      Plus(expressions.map((e) => e.distributeExponent()).toList());
+  Eq distributeExponent({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Plus(expressions.map((e) => e.distributeExponent(depth: depth)));
+  }
 
   @override
-  Eq simplifyDivisionOfAddition() =>
-      Plus(expressions.map((e) => e.simplifyDivisionOfAddition()).toList());
+  Eq simplifyDivisionOfAddition({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Plus(
+      expressions.map((e) => e.simplifyDivisionOfAddition(depth: depth)),
+    );
+  }
 
   @override
-  Eq combineMultiplicationsAndPowers() => Plus(
-    expressions.map((e) => e.combineMultiplicationsAndPowers()).toList(),
-  );
+  Eq combineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Plus(expressions.map((e) => e.combineMultiplications(depth: depth)));
+  }
+
+  @override
+  Eq combinePowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth <= 0) return this;
+    }
+    return Plus(expressions.map((e) => e.combinePowers(depth: depth)));
+  }
+
+  @override
+  Eq? tryCancelDivision(Eq other) {
+    final ret = <Eq>[];
+    for (final e in expressions) {
+      final d = e.tryCancelDivision(other);
+      if (d == null) {
+        return null;
+      }
+      ret.add(d);
+    }
+    return Plus(ret);
+  }
+
+  @override
+  bool get isSingle => false;
+
+  @override
+  bool get isLone {
+    if (expressions.length != 1) return false;
+    return expressions[0].isLone;
+  }
+
+  @override
+  bool hasVariable(Variable v) => expressions.any((e) => e.hasVariable(v));
 
   @override
   bool isSame(Eq otherSimplified, [double epsilon = 1e-6]) {
@@ -195,9 +290,6 @@ class Plus extends Eq {
     }
     return true;
   }
-
-  @override
-  bool hasVariable(Variable v) => expressions.any((e) => e.hasVariable(v));
 
   @override
   String toString() {
@@ -246,23 +338,5 @@ class Plus extends Eq {
       return Constant((aC + bC) * aSimplified.value).simplify();
     }
     return aSimplified.withConstant(aC + bC);
-  }
-
-  @override
-  Eq factorOutMinus() =>
-      Plus(expressions.map((e) => e.factorOutMinus()).toList());
-
-  @override
-  Eq dissolveMinus() =>
-      Plus(expressions.map((e) => e.dissolveMinus()).toList());
-
-  @override
-  Eq distributeMinus() =>
-      Plus(expressions.map((e) => e.distributeMinus()).toList());
-
-  @override
-  bool get isLone {
-    if (expressions.length != 1) return false;
-    return expressions[0].isLone;
   }
 }
