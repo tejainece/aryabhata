@@ -1,7 +1,7 @@
 import 'package:equation/equation.dart';
 
 class Constant extends Eq implements Value {
-  final double value;
+  final num value;
 
   const Constant(this.value);
 
@@ -17,10 +17,10 @@ class Constant extends Eq implements Value {
   bool isConstant() => true;
 
   @override
-  double toConstant() => value;
+  num toConstant() => value;
 
   @override
-  (double, Eq) separateConstant() => (value, Constant(1));
+  (num, Eq) separateConstant() => (value, Constant(1));
 
   @override
   Eq factorOutMinus() => this;
@@ -88,8 +88,8 @@ class Constant extends Eq implements Value {
   String toString() => value.stringMaybeInt;
 
   @override
-  Eq withConstant(double c) {
-    double value = this.value * c;
+  Eq withConstant(num c) {
+    num value = this.value * c;
     return value.isNegative ? Minus(Constant(-value)) : Constant(value);
   }
 
@@ -100,3 +100,14 @@ class Constant extends Eq implements Value {
 const zero = Constant(0);
 
 const one = Constant(1);
+
+extension NumExt on num {
+  bool get isInt {
+    if(this is int) return true;
+    if (isInfinite) return false;
+    if (isNaN) return false;
+    return (this - round()).abs() < 1e-8;
+  }
+
+  String get stringMaybeInt => isInt ? round().toString() : toString();
+}

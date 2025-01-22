@@ -268,7 +268,7 @@ class Times extends Eq {
 
   // TODO only bracket when necessary
   @override
-  String toString({bool paren = false}) {
+  String toString() {
     final numerators = <Eq>[];
     final denominators = <Eq>[];
     for (final e in expressions) {
@@ -283,17 +283,23 @@ class Times extends Eq {
     }
 
     final sb = StringBuffer();
-    if (Times(numerators).isLone) {
-      sb.write(numerators.join('*'));
-    } else {
-      if (!paren) sb.write('(');
-      sb.write(numerators.join('*'));
-      if (!paren) sb.write(')');
+    for(int i = 0; i < numerators.length; i++) {
+      final n = numerators[i];
+      if(n.isLone) {
+        sb.write(n);
+      } else {
+        sb.write('(');
+        sb.write(n);
+        sb.write(')');
+      }
+      if (i < numerators.length - 1) {
+        sb.write('⋅');
+      }
     }
     if (denominators.isNotEmpty) {
       sb.write('/');
       if (Times(denominators).isLone) {
-        sb.write(denominators.join('*'));
+        sb.write(denominators.join('⋅'));
       } else {
         sb.write('(');
         for (int i = 0; i < denominators.length; i++) {
@@ -301,10 +307,10 @@ class Times extends Eq {
           if (d is! Times) {
             sb.write(d);
           } else {
-            sb.write(d.toString(paren: true));
+            sb.write(d.toString());
           }
           if (i < denominators.length - 1) {
-            sb.write('*');
+            sb.write('⋅');
           }
         }
         sb.write(')');

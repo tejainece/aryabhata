@@ -19,8 +19,13 @@ void main() {
   print(eq);
    */
 
-  Eq eq = x / y / z;
+  /*Eq eq = x / y / z;
   print(eq);
   eq = eq.simplify();
-  print(eq);
+  print(eq);*/
+
+  {
+    Eq eq = (x * y).pow(Eq.c(2)) * (Eq.c(1) + Eq.c(2));
+    print(eq);
+  }
 }

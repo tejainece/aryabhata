@@ -61,14 +61,14 @@ abstract class Eq {
 
   bool isConstant() => toConstant() != null;
 
-  double? toConstant() {
+  num? toConstant() {
     var s = simplify();
     if (s is Constant) return s.value;
     if (s is Minus) return s.toConstant();
     return null;
   }
 
-  Eq withConstant(double c) {
+  Eq withConstant(num c) {
     if (c.abs() < 1e-6) {
       return Constant(0);
     }
@@ -80,7 +80,7 @@ abstract class Eq {
         : Times([Constant(c), this]);
   }
 
-  (double, Eq) separateConstant();
+  (num, Eq) separateConstant();
 
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
   Eq expandMultiplications({int? depth});
@@ -187,13 +187,3 @@ abstract class Eq {
 }
 
 abstract class Value extends Eq {}
-
-extension DoubleExt on double {
-  bool get isInt {
-    if(isInfinite) return false;
-    if(isNaN) return false;
-    return (this - round()).abs() < 1e-8;
-  }
-
-  String get stringMaybeInt => isInt ? round().toString() : toString();
-}

@@ -28,6 +28,7 @@ void main() {
     test('test', () {
       for (final test in _Test.cases) {
         final res = test.eq.factorOutAddition();
+        print(test.eq);
         expect(res, EqEqualityMatcher(test.res));
       }
     });

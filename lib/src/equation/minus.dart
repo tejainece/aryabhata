@@ -15,14 +15,14 @@ class Minus extends Eq {
   }
 
   @override
-  double? toConstant() {
+  num? toConstant() {
     final v = expression.simplify();
     if (v is! Constant) return null;
     return -v.value;
   }
 
   @override
-  (double, Eq) separateConstant() {
+  (num, Eq) separateConstant() {
     final (c, ne) = expression.separateConstant();
     return (-c, ne);
   }
@@ -113,7 +113,7 @@ class Minus extends Eq {
       Minus(expression.factorOutAddition()).dissolveMinus();
 
   @override
-  Eq withConstant(double c) {
+  Eq withConstant(num c) {
     var ret = expression.withConstant(c);
     return ret is Minus ? ret.expression : Minus(ret);
   }

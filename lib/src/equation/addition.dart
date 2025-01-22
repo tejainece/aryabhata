@@ -173,14 +173,14 @@ class Plus extends Eq {
   }
 
   @override
-  (double, Plus) separateConstant() {
+  (num, Plus) separateConstant() {
     final separated = expressions.map((e) => e.separateConstant()).toList();
     final constants = separated.map((e) => e.$1).toList();
-    double gcd = gcdAll(constants);
+    num gcd = gcdAll(constants);
     // Separate sign
     final numNeg = constants.fold(
       0,
-      (int v, double c) => c.isNegative ? ++v : v,
+      (int v, num c) => c.isNegative ? ++v : v,
     );
     if (numNeg > constants.length / 2) {
       gcd = -gcd;
