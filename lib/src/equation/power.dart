@@ -10,9 +10,8 @@ class Power extends Eq {
   Power(this.base, this.exponent);
 
   factory Power.right(Eq base, Eq exponent) {
-    // TODO handle minus(power)
     if (base is Power) {
-      return Power(base.base, Power(base.exponent, exponent));
+      return Power(base.base, Power.right(base.exponent, exponent));
     }
     return Power(base, exponent);
   }
@@ -20,15 +19,34 @@ class Power extends Eq {
   factory Power.left(Eq base, Eq exponent) => Power(base, exponent);
 
   @override
-  Eq simplify() {
-    var base = this.base.simplify();
-    var exponent = this.exponent.simplify();
-    final ec = exponent.toConstant();
+  (num, Eq) separateConstant() => (1, this);
+
+  @override
+  num? toConstant() {
+    final ret = dissolveConstants();
+    if (ret is Constant || ret is Minus) {
+      return ret.toConstant();
+    }
+    return null;
+  }
+
+  @override
+  Eq dissolveConstants({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final base = this.base.dissolveConstants(depth: depth);
+    final exponent = this.exponent.dissolveConstants(depth: depth);
     final bc = base.toConstant();
+    final ec = exponent.toConstant();
+    if ((bc?.isNaN ?? false) || (ec?.isNaN ?? false)) return nan;
     if (ec != null && bc != null) {
-      return Constant(
-        pow(base.toConstant()!, exponent.toConstant()!).toDouble(),
-      ).simplify();
+      if (bc.isEqual(0) && ec.isEqual(0)) return nan;
+      if (bc.isInfinite) {
+        if (ec.isEqual(0)) return nan;
+      }
+      return Constant(pow(bc, ec)).dissolveMinus();
     }
     if (ec != null) {
       if (ec == 0) {
@@ -38,32 +56,48 @@ class Power extends Eq {
       }
     }
     if (bc != null) {
-      if (bc == 1) {
-        return Constant(1);
-      }
+      if (bc == 1) return Constant(1);
+      if (bc == 0) return Constant(0);
     }
-
     return Power(base, exponent);
   }
 
   @override
-  (double, Eq) separateConstant() => (1, this);
+  Eq factorOutMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Power(
+      base.factorOutMinus(depth: depth),
+      exponent.factorOutMinus(depth: depth),
+    ).dissolveMinus(depth: 1);
+  }
 
-  // TODO improve
   @override
-  Eq factorOutMinus() =>
-      Power(base.factorOutMinus(), exponent.factorOutMinus());
+  Eq dissolveMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var base = this.base.dissolveMinus(depth: depth);
+    var exponent = this.exponent.dissolveMinus(depth: depth);
+    // (-x)^(2n) = x^(2n)
+    if (exponent.toConstant()?.tryToInt?.isEven ?? false) {
+      if (base is Minus) {
+        return Power(base.expression, exponent);
+      }
+    }
+    return Power(base, exponent);
+  }
 
-  // TODO improve
-  @override
-  Eq dissolveMinus() => Power(base.dissolveMinus(), exponent.dissolveMinus());
-
-  // TODO improve
   @override
   Eq distributeMinus() =>
       Power(base.distributeMinus(), exponent.distributeMinus());
 
-  // TODO improve
+  @override
+  Eq dropMinus() => this;
+
   @override
   Eq combineAddition() =>
       Power(base.combineAddition(), exponent.combineAddition());
@@ -72,7 +106,7 @@ class Power extends Eq {
   Eq expandMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
 
     var base = this.base.expandMultiplications(depth: depth);
@@ -94,28 +128,82 @@ class Power extends Eq {
   Eq distributeExponent({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    var base = this.base.distributeExponent(depth: depth);
+    var base = this.base
+        .distributeExponent(depth: depth)
+        .dissolveMinus(depth: 1);
     var exponent = this.exponent.distributeExponent(depth: depth);
-    // TODO handle unary minus
+    if (base is Minus) {
+      base = base.expression;
+      if (base is Times) {
+        return Times([
+          (-one).pow(exponent),
+          ...base.expressions.map((e) {
+            if (e is Power) return Power(e.base, Times([e.exponent, exponent]));
+            return Power(e, exponent);
+          }),
+        ]);
+      } else if (base is Power) {
+        return Times([
+          (-one).pow(exponent),
+          Power(base.base, Times([base.exponent, exponent])),
+        ]);
+      }
+      return Power(Minus(base), exponent);
+    }
     if (base is Times) {
-      return Times(base.expressions.map((e) => Power(e, exponent)));
+      return Times(
+        base.expressions.map((e) {
+          if (e is Power) return Power(e.base, Times([e.exponent, exponent]));
+          return Power(e, exponent);
+        }),
+      );
+    } else if (base is Power) {
+      return Power(base.base, Times([base.exponent, exponent]));
     }
     return Power(base, exponent);
   }
 
   @override
-  Eq simplifyDivisionOfAddition({int? depth}) {
-    // TODO Power(expressions.map((e) => e.simplifyDivisionOfAddition()).toList());
-    throw UnimplementedError();
+  Eq dissolvePowerOfPower({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var exponent = this.exponent.dissolvePowerOfPower(depth: depth);
+    var base = this.base.dissolvePowerOfPower(depth: depth);
+    if (base is Power) {
+      return Power(base.base, Times([base.exponent, exponent]));
+    } else if (base is Minus) {
+      final inner = base.expression;
+      if (inner is Power) {
+        return Times([
+          Power(-one, exponent) *
+              Power(inner.base, Times([exponent, inner.exponent])),
+        ]);
+      }
+    }
+    return Power(base, exponent);
+  }
+
+  @override
+  Eq expandDivision({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Power(
+      base.expandDivision(depth: depth),
+      exponent.expandDivision(depth: depth),
+    );
   }
 
   @override
   Eq combineMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
     return Power(
       base.combineMultiplications(depth: depth),
@@ -127,7 +215,7 @@ class Power extends Eq {
   Eq combinePowers({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
     return Power(
       base.combinePowers(depth: depth),
@@ -213,6 +301,14 @@ class Power extends Eq {
   bool hasVariable(Variable v) =>
       base.hasVariable(v) || exponent.hasVariable(v);
 
+  bool canDissolveToConstant() {
+    if (base.canDissolveConstants() || exponent.canDissolveConstants()) {
+      return true;
+    }
+    // TODO is this stackoverflow
+    return toConstant() != null;
+  }
+
   @override
   Eq substitute(Map<String, Eq> substitutions) =>
       Power(base.substitute(substitutions), exponent.substitute(substitutions));
@@ -233,23 +329,111 @@ class Power extends Eq {
   }
 
   @override
-  String toString() {
-    final sb = StringBuffer();
-    if (base.isLone && base is! Minus) {
-      sb.write(base);
-    } else {
-      sb.write('(');
-      sb.write(base);
-      sb.write(')');
+  bool canDissolveConstants() {
+    if (base.canDissolveConstants() || exponent.canDissolveConstants()) {
+      return true;
     }
-    sb.write('^');
-    if (exponent.isLone) {
-      sb.write(exponent);
+    return toConstant() != null;
+  }
+
+  @override
+  bool canDissolveMinus() {
+    if (base.canDissolveMinus() || exponent.canDissolveMinus()) {
+      return true;
+    }
+    if (exponent.toConstant()?.tryToInt?.isEven ?? false) {
+      return base is Minus;
+    }
+    return false;
+  }
+
+  @override
+  bool canCombinePowers() =>
+      base.canCombinePowers() || exponent.canCombinePowers();
+
+  @override
+  bool canDissolvePowerOfPower() {
+    if (base.canDissolvePowerOfPower() || exponent.canDissolvePowerOfPower()) {
+      return true;
+    }
+    if (base is Power) return true;
+    return base is Minus && (base as Minus).expression is Power;
+  }
+
+  @override
+  Simplification? canSimplify() {
+    Simplification? s = base.canSimplify() ?? exponent.canSimplify();
+    if (s != null) return s;
+    if (canDissolveToConstant()) return Simplification.dissolveConstants;
+    if (canDissolveMinus()) return Simplification.dissolveMinus;
+    if (canDissolvePowerOfPower()) return Simplification.dissolvePowerOfPower;
+    return null;
+  }
+
+  /*
+  @override
+  Eq simplify() {
+    var base = this.base.simplify();
+    var exponent = this.exponent.simplify();
+    final ec = exponent.toConstant();
+    final bc = base.toConstant();
+    if ((bc?.isNaN ?? false) || (ec?.isNaN ?? false)) return nan;
+    if (ec != null && bc != null) {
+      if (bc.isEqual(0) && ec.isEqual(0)) return nan;
+      if (bc.isInfinite) {
+        if (ec.isEqual(0)) return nan;
+      }
+      return Constant(pow(bc, ec)).simplify();
+    }
+    if (ec != null) {
+      if (ec == 0) {
+        return Constant(1.0);
+      } else if (ec == 1) {
+        return base;
+      }
+    }
+    if (bc != null) {
+      if (bc == 1) return Constant(1);
+      if (bc == 0) return Constant(0);
+    }
+    return Power(base, exponent).dissolvePowerOfPower();
+  }*/
+
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
+    final sb = StringBuffer();
+    if (base.isLone && base is! Minus && base is! Power) {
+      sb.write(base.toString(spec: spec));
     } else {
-      sb.write('(');
-      sb.write(exponent);
-      sb.write(')');
+      sb.write(spec.lparen);
+      sb.write(base.toString(spec: spec));
+      sb.write(spec.rparen);
+    }
+    sb.write(spec.power);
+    if (exponent.isLone) {
+      sb.write(exponent.toString(spec: spec));
+    } else {
+      sb.write(spec.lparen);
+      sb.write(exponent.toString(spec: spec));
+      sb.write(spec.rparen);
     }
     return sb.toString();
+  }
+
+  static bool canCombinePower(Power a, Power b) {
+    return !a.exponent.isSame(b.exponent);
+  }
+
+  static Power? tryCombinePower(Power a, Power b) {
+    // TODO dissolve powerOfPowers?
+    if (!a.exponent.isSame(b.exponent)) return null;
+    return Power(Times([a.base, b.base]), a.exponent);
+  }
+
+  static Eq? tryCombineMultiplicativeTerms(Power a, Power b) {
+    if (a.base.isSame(b.base)) {
+      return Power(a.base, a.exponent + b.exponent);
+    }
+    return null;
   }
 }

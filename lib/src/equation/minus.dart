@@ -6,19 +6,19 @@ class Minus extends Eq {
   Minus(this.expression);
 
   @override
-  Eq simplify() {
-    var inner = expression.simplify();
-    if (inner is Minus) {
-      return inner.expression;
-    }
-    return Minus(inner);
-  }
-
-  @override
   num? toConstant() {
     final v = expression.simplify();
     if (v is! Constant) return null;
     return -v.value;
+  }
+
+  @override
+  Eq dissolveConstants({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Minus(expression.dissolveConstants(depth: depth)).dissolveMinus();
   }
 
   @override
@@ -28,25 +28,34 @@ class Minus extends Eq {
   }
 
   @override
-  Eq factorOutMinus() {
-    var inner = expression.factorOutMinus();
-    if (inner is Minus) {
-      return inner.expression;
+  Eq factorOutMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
     }
-    return Minus(inner);
+    int count = 1;
+    var expression = this.expression.factorOutMinus(depth: depth);
+    while (expression is Minus) {
+      count++;
+      expression = expression.expression;
+    }
+    return count % 2 == 0 ? expression : Minus(expression);
   }
 
   @override
-  Eq dissolveMinus() {
-    Eq ex = expression.dissolveMinus();
-    if (ex is Minus) {
-      return ex.expression;
+  Eq dissolveMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
     }
-    return Minus(ex);
+    int count = 1;
+    var expression = this.expression.dissolveMinus(depth: depth);
+    while (expression is Minus) {
+      count++;
+      expression = expression.expression;
+    }
+    return count % 2 == 0 ? expression : Minus(expression);
   }
-
-  @override
-  List<Eq> multiplicativeTerms() => [this];
 
   @override
   Eq distributeMinus() {
@@ -87,6 +96,18 @@ class Minus extends Eq {
   }
 
   @override
+  Eq dropMinus() {
+    var ret = expression;
+    while (ret is Minus) {
+      ret = ret.expression;
+    }
+    return ret;
+  }
+
+  @override
+  List<Eq> multiplicativeTerms() => [this];
+
+  @override
   Eq combineAddition() => Minus(expression.combineAddition());
 
   @override
@@ -98,8 +119,8 @@ class Minus extends Eq {
       Minus(expression.distributeExponent(depth: depth));
 
   @override
-  Eq simplifyDivisionOfAddition({int? depth}) =>
-      Minus(expression.simplifyDivisionOfAddition(depth: depth));
+  Eq expandDivision({int? depth}) =>
+      Minus(expression.expandDivision(depth: depth));
 
   @override
   Eq combineMultiplications({int? depth}) =>
@@ -109,8 +130,12 @@ class Minus extends Eq {
   Eq combinePowers({int? depth}) => Minus(expression.combinePowers());
 
   @override
+  Eq dissolvePowerOfPower({int? depth}) =>
+      Minus(expression.dissolvePowerOfPower());
+
+  @override
   Eq factorOutAddition() =>
-      Minus(expression.factorOutAddition()).dissolveMinus();
+      Minus(expression.factorOutAddition()).dissolveMinus(depth: 1);
 
   @override
   Eq withConstant(num c) {
@@ -149,16 +174,52 @@ class Minus extends Eq {
   }
 
   @override
-  String toString() {
+  bool canDissolveConstants() => expression.canDissolveConstants();
+
+  @override
+  bool canDissolveMinus() {
+    if (expression.canDissolveMinus()) return true;
+    if (expression is Minus) return true;
+    return (expression is Constant &&
+        (expression as Constant).value.isNegative);
+  }
+
+  @override
+  bool canCombinePowers() => expression.canCombinePowers();
+
+  @override
+  bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
+
+  @override
+  Simplification? canSimplify() {
+    final s = expression.canSimplify();
+    if (s != null) return s;
+    if(canDissolveMinus()) return Simplification.dissolveMinus;
+    return null;
+  }
+
+  /*
+  @override
+  Eq simplify() {
+    var inner = expression.simplify();
+    if (inner is Minus) {
+      return inner.expression;
+    }
+    return Minus(inner);
+  }
+   */
+
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
     final exp = expression;
     if (exp is Constant) {
       if (exp.value.isNegative) {
-        return exp.toString();
+        return exp.toString(spec: spec);
       }
-      return '-$exp';
-    } else if (exp is Variable) {
-      return '-$exp';
+      return '-${exp.toString(spec: spec)}';
+    } else if (exp.isLone) {
+      return '-${exp.toString(spec: spec)}';
     }
-    return '-($expression)';
+    return '-(${expression.toString(spec: spec)})';
   }
 }

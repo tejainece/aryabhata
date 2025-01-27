@@ -11,22 +11,15 @@ class _TestCase {
   _TestCase(this.eq, this.res);
 
   static final cases = <_TestCase>[
-    _TestCase(x * x, x.pow(Eq.c(2))),
-    _TestCase(x * x * x, x.pow(Eq.c(3))),
-    _TestCase(x * (Eq.c(2) * x) * x, Eq.c(2) * x.pow(Eq.c(3))),
-    _TestCase(x.pow(Eq.c(2)) * x.pow(Eq.c(3)), x.pow(Eq.c(5))),
-
-    _TestCase(-x * x, -x.pow(Eq.c(2))),
-
-    _TestCase(x.pow(y) * x.pow(y), x.pow(Eq.c(2) * y)),
+    _TestCase(x.pow(Eq.c(2)) * y.pow(Eq.c(2)), (x * y).pow(Eq.c(2))),
   ];
 }
 
 void main() {
-  group('Times.combineMultiplications', () {
+  group('Times.combinePowers', () {
     test('test', () {
       for (final tc in _TestCase.cases) {
-        final res = tc.eq.combineMultiplications();
+        final res = tc.eq.combinePowers();
         expect(res, EqEqualityMatcher(tc.res));
       }
     });

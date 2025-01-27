@@ -2,9 +2,16 @@ import 'dart:math';
 
 import 'package:equation/equation.dart';
 
+// TODO implement log
+
 abstract class Trig extends Eq {
+  Eq get expression;
+
   @override
   (double, Eq) separateConstant() => (1, this);
+
+  @override
+  Eq dropMinus() => this;
 
   @override
   List<Eq> multiplicativeTerms() => [this];
@@ -20,35 +27,69 @@ abstract class Trig extends Eq {
     assert(other.isSingle);
     return isSame(other) ? Constant(1.0) : null;
   }
-}
-
-class Cos extends Trig {
-  final Eq exp;
-
-  Cos(this.exp);
 
   @override
-  Eq simplify() {
-    var inner = exp.simplify();
-    var c = inner.toConstant();
-    if (c != null) {
-      return Constant(cos(c));
-    } else if (inner is Minus) {
-      return Cos(inner.expression);
-    }
-    return Cos(inner);
+  bool canDissolveConstants() {
+    if (expression.canDissolveConstants()) return true;
+    return expression.toConstant() != null;
   }
 
   @override
+  bool canDissolveMinus() {
+    if (expression.canDissolveMinus()) return true;
+    return expression is Minus;
+  }
+
+  @override
+  bool canCombinePowers() => expression.canCombinePowers();
+
+  @override
+  bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
+
+  @override
+  Simplification? canSimplify() {
+    final ret = expression.canSimplify();
+    if (ret != null) return ret;
+    if (canDissolveConstants()) return Simplification.dissolveConstants;
+    if (canDissolveMinus()) return Simplification.dissolveMinus;
+    return null;
+  }
+}
+
+class Cos extends Trig {
+  @override
+  final Eq expression;
+
+  Cos(this.expression);
+
+  @override
   double? toConstant() {
-    final c = exp.simplify().toConstant();
+    final c = expression.simplify().toConstant();
     if (c == null) return null;
     return cos(c);
   }
 
   @override
-  Eq factorOutMinus() {
-    var inner = exp.factorOutMinus();
+  Eq dissolveConstants({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final exp = expression.dissolveConstants(depth: depth);
+    final c = exp.toConstant();
+    if (c != null) {
+      return Constant(cos(c)).dissolveMinus();
+    }
+    return Cos(exp);
+  }
+
+  @override
+  Eq factorOutMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var inner = expression.factorOutMinus(depth: depth);
     if (inner is Minus) {
       return Cos(inner.expression);
     }
@@ -56,8 +97,12 @@ class Cos extends Trig {
   }
 
   @override
-  Eq dissolveMinus() {
-    var inner = exp.dissolveMinus();
+  Eq dissolveMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var inner = expression.dissolveMinus(depth: depth);
     if (inner is Minus) {
       return Cos(inner.expression);
     }
@@ -66,7 +111,7 @@ class Cos extends Trig {
 
   @override
   Eq distributeMinus() {
-    var inner = exp.distributeMinus();
+    var inner = expression.distributeMinus();
     if (inner is Minus) {
       return Cos(inner.expression);
     }
@@ -74,62 +119,71 @@ class Cos extends Trig {
   }
 
   @override
-  Eq combineAddition() => Cos(exp.combineAddition());
+  Eq combineAddition() => Cos(expression.combineAddition());
 
   @override
   Eq expandMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Cos(exp.expandMultiplications(depth: depth));
+    return Cos(expression.expandMultiplications(depth: depth));
   }
 
   @override
   Eq distributeExponent({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Cos(exp.distributeExponent(depth: depth));
+    return Cos(expression.distributeExponent(depth: depth));
   }
 
   @override
-  Eq simplifyDivisionOfAddition({int? depth}) {
+  Eq dissolvePowerOfPower({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Cos(exp.simplifyDivisionOfAddition(depth: depth));
+    return Cos(expression.dissolvePowerOfPower(depth: depth));
+  }
+
+  @override
+  Eq expandDivision({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Cos(expression.expandDivision(depth: depth));
   }
 
   @override
   Eq combineMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Cos(exp.combineMultiplications(depth: depth));
+    return Cos(expression.combineMultiplications(depth: depth));
   }
 
   @override
   Eq combinePowers({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Cos(exp.combinePowers(depth: depth));
+    return Cos(expression.combinePowers(depth: depth));
   }
 
   @override
-  Eq factorOutAddition() => Cos(exp.factorOutAddition());
+  Eq factorOutAddition() => Cos(expression.factorOutAddition());
 
   @override
-  bool hasVariable(Variable v) => exp.hasVariable(v);
+  bool hasVariable(Variable v) => expression.hasVariable(v);
 
   @override
   Eq substitute(Map<String, Eq> substitutions) =>
-      Cos(exp.substitute(substitutions));
+      Cos(expression.substitute(substitutions));
 
   @override
   bool isSame(Eq other, [double epsilon = 1e-6]) {
@@ -141,43 +195,65 @@ class Cos extends Trig {
     if (other is! Cos) {
       return false;
     }
-    return thisSimplified.exp.isSame(other.exp, epsilon);
+    return thisSimplified.expression.isSame(other.expression, epsilon);
   }
 
+  /*
   @override
-  String toString() => 'cos($exp)';
+  Eq simplify() {
+    var inner = expression.simplify();
+    var c = inner.toConstant();
+    if (c != null) {
+      return Constant(cos(c));
+    } else if (inner is Minus) {
+      return Cos(inner.expression);
+    }
+    return Cos(inner);
+  }
+   */
+
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) =>
+      'cos(${expression.toString(spec: spec)})';
 }
 
 class Sin extends Trig {
-  final Eq exp;
-
-  Sin(this.exp);
-
   @override
-  Eq simplify() {
-    var inner = exp.simplify();
-    final c = inner.toConstant();
-    if (c != null) {
-      return Constant(sin(c));
-    } else if (inner is Minus) {
-      return Minus(Sin(inner.expression));
-    }
-    return Sin(inner);
-  }
+  final Eq expression;
+
+  Sin(this.expression);
 
   @override
   double? toConstant() {
-    final c = exp.simplify().toConstant();
+    final c = expression.simplify().toConstant();
     if (c == null) return null;
     return sin(c);
   }
 
   @override
-  Eq combineAddition() => Sin(exp.combineAddition());
+  Eq dissolveConstants({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final exp = expression.dissolveConstants(depth: depth);
+    final c = exp.toConstant();
+    if (c != null) {
+      return Constant(sin(c)).dissolveMinus();
+    }
+    return Sin(exp);
+  }
 
   @override
-  Eq factorOutMinus() {
-    var inner = exp.factorOutMinus();
+  Eq combineAddition() => Sin(expression.combineAddition());
+
+  @override
+  Eq factorOutMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var inner = expression.factorOutMinus(depth: depth);
     if (inner is Minus) {
       return Minus(Sin(inner.expression));
     }
@@ -185,8 +261,12 @@ class Sin extends Trig {
   }
 
   @override
-  Eq dissolveMinus() {
-    var inner = exp.dissolveMinus();
+  Eq dissolveMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var inner = expression.dissolveMinus(depth: depth);
     if (inner is Minus) {
       return Minus(Sin(inner.expression));
     }
@@ -195,7 +275,7 @@ class Sin extends Trig {
 
   @override
   Eq distributeMinus() {
-    var inner = exp.distributeMinus();
+    var inner = expression.distributeMinus();
     if (inner is Minus) {
       return Minus(Sin(inner.expression));
     }
@@ -206,56 +286,65 @@ class Sin extends Trig {
   Eq expandMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Sin(exp.expandMultiplications(depth: depth));
+    return Sin(expression.expandMultiplications(depth: depth));
   }
 
   @override
   Eq combinePowers({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Sin(exp.combinePowers(depth: depth));
+    return Sin(expression.combinePowers(depth: depth));
+  }
+
+  @override
+  Eq dissolvePowerOfPower({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Sin(expression.dissolvePowerOfPower(depth: depth));
   }
 
   @override
   Eq distributeExponent({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Sin(exp.distributeExponent(depth: depth));
+    return Sin(expression.distributeExponent(depth: depth));
   }
 
   @override
-  Eq simplifyDivisionOfAddition({int? depth}) {
+  Eq expandDivision({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Sin(exp.simplifyDivisionOfAddition(depth: depth));
+    return Sin(expression.expandDivision(depth: depth));
   }
 
   @override
   Eq combineMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Sin(exp.combineMultiplications(depth: depth));
+    return Sin(expression.combineMultiplications(depth: depth));
   }
 
   @override
-  Eq factorOutAddition() => Sin(exp.factorOutAddition());
+  Eq factorOutAddition() => Sin(expression.factorOutAddition());
 
   @override
   Eq substitute(Map<String, Eq> substitutions) =>
-      Sin(exp.substitute(substitutions));
+      Sin(expression.substitute(substitutions));
 
   @override
-  bool hasVariable(Variable v) => exp.hasVariable(v);
+  bool hasVariable(Variable v) => expression.hasVariable(v);
 
   @override
   bool isSame(Eq other, [double epsilon = 1e-6]) {
@@ -267,43 +356,65 @@ class Sin extends Trig {
     if (other is! Sin) {
       return false;
     }
-    return thisSimplified.exp.isSame(other.exp, epsilon);
+    return thisSimplified.expression.isSame(other.expression, epsilon);
   }
 
+  /*
   @override
-  String toString() => 'sin($exp)';
+  Eq simplify() {
+    var inner = expression.simplify();
+    final c = inner.toConstant();
+    if (c != null) {
+      return Constant(sin(c));
+    } else if (inner is Minus) {
+      return Minus(Sin(inner.expression));
+    }
+    return Sin(inner);
+  }
+   */
+
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) =>
+      'sin(${expression.toString(spec: spec)})';
 }
 
 class Tan extends Trig {
-  final Eq exp;
-
-  Tan(this.exp);
-
   @override
-  Eq simplify() {
-    var inner = exp.simplify();
-    var c = inner.toConstant();
-    if (c != null) {
-      return Constant(tan(c));
-    } else if (inner is Minus) {
-      return Minus(Tan(inner.expression));
-    }
-    return Tan(inner);
-  }
+  final Eq expression;
+
+  Tan(this.expression);
 
   @override
   double? toConstant() {
-    final c = exp.simplify().toConstant();
+    final c = expression.simplify().toConstant();
     if (c == null) return null;
     return tan(c);
   }
 
   @override
-  Eq combineAddition() => Tan(exp.combineAddition());
+  Eq dissolveConstants({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final exp = expression.dissolveConstants(depth: depth);
+    final c = exp.toConstant();
+    if (c != null) {
+      return Constant(tan(c)).dissolveMinus();
+    }
+    return Tan(exp);
+  }
 
   @override
-  Eq factorOutMinus() {
-    var inner = exp.factorOutMinus();
+  Eq combineAddition() => Tan(expression.combineAddition());
+
+  @override
+  Eq factorOutMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var inner = expression.factorOutMinus(depth: depth);
     if (inner is Minus) {
       return Minus(Tan(inner.expression));
     }
@@ -311,8 +422,12 @@ class Tan extends Trig {
   }
 
   @override
-  Eq dissolveMinus() {
-    var inner = exp.dissolveMinus();
+  Eq dissolveMinus({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    var inner = expression.dissolveMinus(depth: depth);
     if (inner is Minus) {
       return Minus(Tan(inner.expression));
     }
@@ -321,7 +436,7 @@ class Tan extends Trig {
 
   @override
   Eq distributeMinus() {
-    var inner = exp.distributeMinus();
+    var inner = expression.distributeMinus();
     if (inner is Minus) {
       return Minus(Tan(inner.expression));
     }
@@ -332,56 +447,65 @@ class Tan extends Trig {
   Eq expandMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Tan(exp.expandMultiplications(depth: depth));
+    return Tan(expression.expandMultiplications(depth: depth));
   }
 
   @override
   Eq distributeExponent({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Tan(exp.distributeExponent(depth: depth));
+    return Tan(expression.distributeExponent(depth: depth));
   }
 
   @override
-  Eq simplifyDivisionOfAddition({int? depth}) {
+  Eq expandDivision({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Tan(exp.simplifyDivisionOfAddition(depth: depth));
+    return Tan(expression.expandDivision(depth: depth));
   }
 
   @override
   Eq combineMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Tan(exp.combineMultiplications(depth: depth));
+    return Tan(expression.combineMultiplications(depth: depth));
   }
 
   @override
   Eq combinePowers({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
-      if (depth <= 0) return this;
+      if (depth < 0) return this;
     }
-    return Tan(exp.combinePowers(depth: depth));
+    return Tan(expression.combinePowers(depth: depth));
   }
 
   @override
-  Eq factorOutAddition() => Tan(exp.factorOutAddition());
+  Eq dissolvePowerOfPower({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Tan(expression.dissolvePowerOfPower(depth: depth));
+  }
+
+  @override
+  Eq factorOutAddition() => Tan(expression.factorOutAddition());
 
   @override
   Eq substitute(Map<String, Eq> substitutions) =>
-      Tan(exp.substitute(substitutions));
+      Tan(expression.substitute(substitutions));
 
   @override
-  bool hasVariable(Variable v) => exp.hasVariable(v);
+  bool hasVariable(Variable v) => expression.hasVariable(v);
 
   @override
   bool isSame(Eq other, [double epsilon = 1e-6]) {
@@ -394,9 +518,24 @@ class Tan extends Trig {
       // TODO compare constants
       return false;
     }
-    return exp.isSame(other.exp, epsilon);
+    return expression.isSame(other.expression, epsilon);
   }
 
+  /*
   @override
-  String toString() => 'tan($exp)';
+  Eq simplify() {
+    var inner = expression.simplify();
+    var c = inner.toConstant();
+    if (c != null) {
+      return Constant(tan(c));
+    } else if (inner is Minus) {
+      return Minus(Tan(inner.expression));
+    }
+    return Tan(inner);
+  }
+   */
+
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) =>
+      'tan(${expression.toString(spec: spec)})';
 }

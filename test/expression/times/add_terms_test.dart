@@ -1,6 +1,8 @@
 import 'package:equation/equation.dart';
 import 'package:test/test.dart';
 
+import '../../testing.dart';
+
 class _AddTermsTest {
   final Eq eq1;
   final Eq eq2;
@@ -26,11 +28,12 @@ class _AddTermsTest {
 void main() {
   group('Times.addTerms', () {
     test('test', () {
-      /*
       for (final test in _AddTermsTest.cases) {
-        expect(Eq.addTerms(test.eq1, test.eq2), EqEqualityMatcher(test.res));
+        expect(
+          Plus.tryAddTerms(test.eq1, test.eq2),
+          EqEqualityMatcher(test.res),
+        );
       }
-       */
     });
   });
 }

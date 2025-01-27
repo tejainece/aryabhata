@@ -4,3 +4,4 @@
 library;
 
 export 'src/equation/equation.dart';
+export 'src/printer.dart';

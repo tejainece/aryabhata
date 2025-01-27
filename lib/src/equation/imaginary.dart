@@ -4,16 +4,31 @@ class Imaginary extends Eq {
   const Imaginary._();
 
   @override
-  Eq simplifyDivisionOfAddition({int? depth}) => this;
+  Eq expandDivision({int? depth}) => this;
 
   @override
   Eq expandMultiplications({int? depth}) => this;
 
   @override
-  Eq simplify() => this;
+  (double, Eq) separateConstant() => (1, this);
 
   @override
-  Eq distributeExponent({int? depth}) => this;
+  Eq dissolveConstants({int? depth}) => this;
+
+  @override
+  num? toConstant() => null;
+
+  @override
+  Eq factorOutMinus({int? depth}) => this;
+
+  @override
+  Eq dissolveMinus({int? depth}) => this;
+
+  @override
+  Eq dropMinus() => this;
+
+  @override
+  Eq distributeMinus() => this;
 
   @override
   Eq combineMultiplications({int? depth}) => this;
@@ -31,16 +46,10 @@ class Imaginary extends Eq {
   Eq combineAddition() => this;
 
   @override
-  Eq factorOutMinus() => this;
+  Eq distributeExponent({int? depth}) => this;
 
   @override
-  Eq dissolveMinus() => this;
-
-  @override
-  Eq distributeMinus() => this;
-
-  @override
-  (double, Eq) separateConstant() => (1, this);
+  Eq dissolvePowerOfPower({int? depth}) => this;
 
   @override
   Eq? tryCancelDivision(Eq other) => other is Imaginary ? one : null;
@@ -61,7 +70,22 @@ class Imaginary extends Eq {
   bool isSame(Eq other, [double epsilon = 1e-6]) => other is Imaginary;
 
   @override
-  String toString() => 'i';
+  bool canDissolveConstants() => false;
+
+  @override
+  bool canDissolveMinus() => false;
+
+  @override
+  bool canCombinePowers() => false;
+
+  @override
+  bool canDissolvePowerOfPower() => false;
+
+  @override
+  Simplification? canSimplify() => null;
+
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) => 'i';
 }
 
 const i = Imaginary._();

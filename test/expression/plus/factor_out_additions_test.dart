@@ -11,14 +11,14 @@ class _Test {
   const _Test(this.eq, this.res);
 
   static List<_Test> cases = [
-    /*_Test(
+    _Test(
       Eq.c(-4 * 3) * x + Eq.c(-8) * y,
       Eq.c(-4) * (Eq.c(3) * x + Eq.c(2) * y),
     ),
-    _Test(x + Constant(2) * x, x * (Eq.c(1) + Eq.c(2))),*/
+    _Test(x + Constant(2) * x, x * (Eq.c(1) + Eq.c(2))),
     _Test(
       (x * y).pow(Eq.c(2)) + (x * y).pow(Eq.c(2)),
-      (x * y).pow(Eq.c(2)) * (Eq.c(1) + Eq.c(2)),
+      (x * y).pow(Eq.c(2)) * (Eq.c(1) + Eq.c(1)),
     ),
   ];
 }
@@ -28,7 +28,6 @@ void main() {
     test('test', () {
       for (final test in _Test.cases) {
         final res = test.eq.factorOutAddition();
-        print(test.eq);
         expect(res, EqEqualityMatcher(test.res));
       }
     });

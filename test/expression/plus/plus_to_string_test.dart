@@ -10,7 +10,7 @@ class _Test {
 
   static final List<_Test> divides = [
     _Test((x * y).pow(Eq.c(2)) + (x * y).pow(Eq.c(2)), '(x⋅y)^2+(x⋅y)^2'),
-    _Test((x * y).pow(Eq.c(2)) + (x * y).pow(Eq.c(2)), '(x⋅y)^2+(x⋅y)^2'),
+    _Test(x.pow(Eq.c(2)) * (Eq.c(1) + Eq.c(2)), 'x^2⋅(1+2)'),
   ];
 }
 

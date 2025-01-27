@@ -1,3 +1,5 @@
+import 'package:equation/src/printer.dart';
+
 import 'addition.dart';
 import 'constant.dart';
 import 'minus.dart';
@@ -57,16 +59,9 @@ abstract class Eq {
   /// Unary minus operator. Creates a [Minus] expression.
   Minus operator -() => Minus(this);
 
-  Eq simplify();
-
   bool isConstant() => toConstant() != null;
 
-  num? toConstant() {
-    var s = simplify();
-    if (s is Constant) return s.value;
-    if (s is Minus) return s.toConstant();
-    return null;
-  }
+  num? toConstant();
 
   Eq withConstant(num c) {
     if (c.abs() < 1e-6) {
@@ -82,21 +77,27 @@ abstract class Eq {
 
   (num, Eq) separateConstant();
 
+  Eq dissolveConstants({int? depth});
+
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
   Eq expandMultiplications({int? depth});
 
   /// x + (1 + y) - (2 + y) = x - y - 1
   Eq combineAddition();
 
-  Eq factorOutMinus();
+  Eq factorOutMinus({int? depth});
 
-  /// -(x + y) = -x - y
+  /// -(x + y) => -x - y
   Eq distributeMinus();
 
-  /// -(-x) = x
-  Eq dissolveMinus();
+  /// -(-x) => x
+  Eq dissolveMinus({int? depth});
 
-  Eq simplifyDivisionOfAddition({int? depth});
+  /// -(a+b) => a+b
+  Eq dropMinus();
+
+  /// (a+b)/x = a/x + b/x
+  Eq expandDivision({int? depth});
 
   /// ((x * y)/z) ** 2 = x**2 * y**2 / z**2
   Eq distributeExponent({int? depth});
@@ -106,6 +107,9 @@ abstract class Eq {
 
   /// x ^ 2 * y ^ 2 = (x * y) ^ 2
   Eq combinePowers({int? depth});
+
+  /// (x ^ y) ^ z => x ^ (y * z)
+  Eq dissolvePowerOfPower({int? depth});
 
   Eq factorOutAddition();
 
@@ -124,7 +128,39 @@ abstract class Eq {
   Eq substitute(Map<String, Eq> substitutions);
 
   @override
-  String toString();
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()});
+
+  bool canDissolveConstants();
+
+  bool canDissolveMinus();
+
+  bool canCombinePowers();
+
+  bool canDissolvePowerOfPower();
+
+  Simplification? canSimplify();
+
+  Eq simplify() {
+    Eq ret = this;
+    for (
+      Simplification? s = ret.canSimplify();
+      s != null;
+      s = ret.canSimplify()
+    ) {
+      if (s == Simplification.dissolveMinus) {
+        ret = ret.dissolveMinus();
+      } else if (s == Simplification.dissolveConstants) {
+        ret = ret.dissolveConstants();
+      } else if (s == Simplification.combineAdditions) {
+        ret = ret.combineAddition();
+      } else if (s == Simplification.combineMultiplications) {
+        ret = ret.combineMultiplications();
+      } else {
+        throw UnimplementedError('$s');
+      }
+    }
+    return ret;
+  }
 
   Quadratic asQuadratic(Variable x) {
     // TODO handle other types
@@ -141,7 +177,8 @@ abstract class Eq {
         c += term;
         continue;
       }
-      var tmp = (term / x.pow(Constant(2))).simplify();
+      Eq tmp = (term / x.pow(Constant(2)));
+      tmp = tmp.simplify();
       if (!tmp.hasVariable(x)) {
         a += tmp;
         continue;
@@ -181,9 +218,16 @@ abstract class Eq {
   }
    */
 
-  static Constant c(double value) => Constant(value);
+  static Constant c(num value) => Constant(value);
 
   static Variable v(String name) => Variable(name);
 }
 
-abstract class Value extends Eq {}
+enum Simplification {
+  dissolveMinus,
+  dissolveConstants,
+  combineAdditions,
+  combineMultiplications,
+  combinePowers,
+  dissolvePowerOfPower,
+}

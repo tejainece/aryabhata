@@ -13,7 +13,6 @@ class _Test {
     _Test(x / (Eq.c(2) * y), 'x/(2⋅y)'),
     _Test((x + y) / (Eq.c(2) * z), '(x+y)/(2⋅z)'),
     _Test((x * y).pow(Eq.c(2)) * (Eq.c(1) + Eq.c(2)), '(x⋅y)^2⋅(1+2)'),
-    _Test((x * y).pow(Eq.c(2)) + (x * y).pow(Eq.c(2)), '(x⋅y)^2+(x⋅y)^2'),
   ];
 }
 
