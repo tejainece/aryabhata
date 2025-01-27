@@ -403,19 +403,31 @@ class Plus extends Eq {
 
   @override
   bool canDissolveMinus() {
-    for(final e in expressions) {
+    for (final e in expressions) {
       if (e.canDissolveMinus()) return true;
     }
     return false;
   }
 
   @override
+  bool canCombineMultiplications() =>
+      expressions.any((e) => e.canCombineMultiplications());
+
+  @override
   bool canCombinePowers() => expressions.any((e) => e.canCombinePowers());
 
   @override
   bool canDissolvePowerOfPower() {
-    for(final e in expressions) {
+    for (final e in expressions) {
       if (e.canDissolvePowerOfPower()) return true;
+    }
+    return false;
+  }
+
+  @override
+  bool canDistributeExponent() {
+    for (final e in expressions) {
+      if (e.canDistributeExponent()) return true;
     }
     return false;
   }

@@ -185,10 +185,16 @@ class Minus extends Eq {
   }
 
   @override
+  bool canCombineMultiplications() => expression.canCombineMultiplications();
+
+  @override
   bool canCombinePowers() => expression.canCombinePowers();
 
   @override
   bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
+
+  @override
+  bool canDistributeExponent() => expression.canDistributeExponent();
 
   @override
   Simplification? canSimplify() {

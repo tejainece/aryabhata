@@ -134,9 +134,13 @@ abstract class Eq {
 
   bool canDissolveMinus();
 
+  bool canCombineMultiplications();
+
   bool canCombinePowers();
 
   bool canDissolvePowerOfPower();
+
+  bool canDistributeExponent();
 
   Simplification? canSimplify();
 
@@ -155,6 +159,10 @@ abstract class Eq {
         ret = ret.combineAddition();
       } else if (s == Simplification.combineMultiplications) {
         ret = ret.combineMultiplications();
+      } else if(s == Simplification.combinePowers) {
+        ret = ret.combinePowers();
+      } else if (s == Simplification.dissolvePowerOfPower) {
+        ret = ret.dissolvePowerOfPower();
       } else {
         throw UnimplementedError('$s');
       }
@@ -230,4 +238,5 @@ enum Simplification {
   combineMultiplications,
   combinePowers,
   dissolvePowerOfPower,
+  distributeExponent,
 }

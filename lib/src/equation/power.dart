@@ -144,11 +144,6 @@ class Power extends Eq {
             return Power(e, exponent);
           }),
         ]);
-      } else if (base is Power) {
-        return Times([
-          (-one).pow(exponent),
-          Power(base.base, Times([base.exponent, exponent])),
-        ]);
       }
       return Power(Minus(base), exponent);
     }
@@ -159,8 +154,6 @@ class Power extends Eq {
           return Power(e, exponent);
         }),
       );
-    } else if (base is Power) {
-      return Power(base.base, Times([base.exponent, exponent]));
     }
     return Power(base, exponent);
   }
@@ -348,6 +341,10 @@ class Power extends Eq {
   }
 
   @override
+  bool canCombineMultiplications() =>
+      base.canCombineMultiplications() || exponent.canCombineMultiplications();
+
+  @override
   bool canCombinePowers() =>
       base.canCombinePowers() || exponent.canCombinePowers();
 
@@ -361,11 +358,24 @@ class Power extends Eq {
   }
 
   @override
+  bool canDistributeExponent() {
+    if (base.canDistributeExponent() || exponent.canDistributeExponent()) {
+      return true;
+    }
+    var exp = base;
+    if (exp is Minus) {
+      exp = (base as Minus).expression;
+    }
+    return exp is Times;
+  }
+
+  @override
   Simplification? canSimplify() {
     Simplification? s = base.canSimplify() ?? exponent.canSimplify();
     if (s != null) return s;
     if (canDissolveToConstant()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
+    if (canDistributeExponent()) return Simplification.distributeExponent;
     if (canDissolvePowerOfPower()) return Simplification.dissolvePowerOfPower;
     return null;
   }

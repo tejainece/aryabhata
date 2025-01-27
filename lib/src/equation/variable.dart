@@ -93,10 +93,16 @@ class Variable extends Eq {
   bool canDissolveMinus() => false;
 
   @override
+  bool canCombineMultiplications() => false;
+
+  @override
   bool canCombinePowers() => false;
 
   @override
   bool canDissolvePowerOfPower() => false;
+
+  @override
+  bool canDistributeExponent() => false;
 
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) => name;

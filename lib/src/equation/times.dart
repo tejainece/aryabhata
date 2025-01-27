@@ -30,18 +30,6 @@ class Times extends Eq {
     return Times._(ret);
   }
 
-  /*
-  @override
-  Eq simplify() {
-    /*
-    Eq ret = Times(expressions.map((e) => e.simplify()));
-    ret = ret.combinePowers();
-    // ret = ret.distributeExponent(); // .dissolvePowerOfPower();
-    ret = ret.combineMultiplications();
-    return ret;*/
-  }
-   */
-
   @override
   (double, Eq) separateConstant() {
     double c = 1.0;
@@ -242,7 +230,6 @@ class Times extends Eq {
     if (eq is! Times) {
       return eq.combineMultiplications(depth: depth).withConstant(c);
     }
-    eq = eq.distributeExponent();
     final ret = eq.expressions.toList();
     for (int i = 0; i < ret.length; i++) {
       for (int j = i + 1; j < ret.length; j++) {
@@ -421,6 +408,23 @@ class Times extends Eq {
   }
 
   @override
+  bool canCombineMultiplications() {
+    for (final e in expressions) {
+      if (e.canCombineMultiplications()) return true;
+    }
+    for (int i = 0; i < expressions.length; i++) {
+      for (int j = i + 1; j < expressions.length; j++) {
+        final tmp = tryCombineMultiplicativeTerms(
+          expressions[i],
+          expressions[j],
+        );
+        if (tmp != null) return true;
+      }
+    }
+    return false;
+  }
+
+  @override
   bool canCombinePowers() {
     final ret = <Eq>[];
     bool isMinus = false;
@@ -461,6 +465,14 @@ class Times extends Eq {
   }
 
   @override
+  bool canDistributeExponent() {
+    for (final e in expressions) {
+      if (e.canDistributeExponent()) return true;
+    }
+    return false;
+  }
+
+  @override
   Simplification? canSimplify() {
     for (final e in expressions) {
       final s = e.canSimplify();
@@ -468,11 +480,25 @@ class Times extends Eq {
     }
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
-    // TODO combineMultiplications
-    if(canCombinePowers()) return Simplification.combinePowers;
-    // TODO combinePowers
+    if (canDistributeExponent()) return Simplification.distributeExponent;
+    if (canCombineMultiplications()) {
+      return Simplification.combineMultiplications;
+    }
+    if (canCombinePowers()) return Simplification.combinePowers;
     return null;
   }
+
+  /*
+  @override
+  Eq simplify() {
+    Eq ret = Times(expressions.map((e) => e.simplify()));
+    ret = ret.combinePowers();
+    ret = ret.distributeExponent();
+    ret = ret.dissolvePowerOfPower();
+    ret = ret.combineMultiplications();
+    return ret;
+  }
+   */
 
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {

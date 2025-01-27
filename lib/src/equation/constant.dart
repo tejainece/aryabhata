@@ -102,10 +102,16 @@ class Constant extends Eq {
   bool canDissolveMinus() => value.isNegative;
 
   @override
+  bool canCombineMultiplications() => false;
+
+  @override
   bool canCombinePowers() => false;
 
   @override
   bool canDissolvePowerOfPower() => false;
+
+  @override
+  bool canDistributeExponent() => false;
 
   @override
   Simplification? canSimplify() => null;
