@@ -404,7 +404,7 @@ class Times extends Eq {
       if (e.canDissolveMinus()) return true;
       if (e is Minus) return true;
     }
-    return true;
+    return false;
   }
 
   @override

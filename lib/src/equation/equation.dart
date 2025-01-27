@@ -163,6 +163,8 @@ abstract class Eq {
         ret = ret.combinePowers();
       } else if (s == Simplification.dissolvePowerOfPower) {
         ret = ret.dissolvePowerOfPower();
+      } else if(s == Simplification.distributeExponent) {
+        ret = ret.distributeExponent();
       } else {
         throw UnimplementedError('$s');
       }

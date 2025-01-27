@@ -347,7 +347,7 @@ class Plus extends Eq {
       if (s != null) return s;
     }
     for (int i = 0; i < expressions.length; i++) {
-      for (int j = 0; j < expressions.length; j++) {
+      for (int j = i + 1; j < expressions.length; j++) {
         if (canAddTerms(expressions[i], expressions[j])) {
           return Simplification.combineAdditions;
         }

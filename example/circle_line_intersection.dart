@@ -8,9 +8,11 @@ void main() {
   Eq circle =
       (x - h).pow(Constant(2)) - (y - k).pow(Constant(2)) - r.pow(Constant(2));
   print(circle.toString(spec: printer));
+
   print('Expand multiplications');
-  circle =
-      circle.expandMultiplications().combineAddition().combineMultiplications();
+  circle = circle.expandMultiplications();
+  circle = circle.combineAddition();
+  circle = circle.combineMultiplications();
   print(circle.toString(spec: printer));
 
   print('substituting y');
