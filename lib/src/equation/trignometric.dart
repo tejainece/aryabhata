@@ -44,7 +44,13 @@ abstract class Trig extends Eq {
   bool canCombineMultiplications() => expression.canCombineMultiplications();
 
   @override
+  bool canExpandMultiplications() => expression.canExpandMultiplications();
+
+  @override
   bool canCombinePowers() => expression.canCombinePowers();
+
+  @override
+  bool canExpandPowers() => expression.canExpandPowers();
 
   @override
   bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
@@ -134,6 +140,15 @@ class Cos extends Trig {
       if (depth < 0) return this;
     }
     return Cos(expression.expandMultiplications(depth: depth));
+  }
+
+  @override
+  Eq expandPowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Cos(expression.expandPowers(depth: depth));
   }
 
   @override
@@ -298,6 +313,15 @@ class Sin extends Trig {
   }
 
   @override
+  Eq expandPowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Sin(expression.expandPowers(depth: depth));
+  }
+
+  @override
   Eq combinePowers({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -456,6 +480,15 @@ class Tan extends Trig {
       if (depth < 0) return this;
     }
     return Tan(expression.expandMultiplications(depth: depth));
+  }
+
+  @override
+  Eq expandPowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Tan(expression.expandPowers(depth: depth));
   }
 
   @override

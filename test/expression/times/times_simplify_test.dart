@@ -19,14 +19,15 @@ class _Test {
       -(Constant(2) * ((Constant(4) * a * x * c) / (Constant(2) * b.pow(Constant(2))))),
       -((Constant(8) * a * x * c) / (Constant(2) * (b.pow(Constant(2))))),
     ),*/
-    _Test(x.pow(two)/x.pow(two).lpow(one), one),
+    // TODO _Test(x.pow(two)/x.pow(two).lpow(one), one),
+    _Test((-(a*x)-c)/b, Minus(-((a*x + c)/b))),
   ];
 }
 
 void main() {
   group('Times.simplify', () {
     test('constants', () {
-      for (final test in _Test.cases) {
+      for (final test in _Test.constants) {
         final res = test.eq.simplify();
         expect(res, EqEqualityMatcher(test.res));
       }

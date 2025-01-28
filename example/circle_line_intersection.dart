@@ -10,34 +10,18 @@ void main() {
   print(circle.toString(spec: printer));
 
   print('Expand multiplications');
-  circle = circle.expandMultiplications();
-  circle = circle.combineAddition();
-  circle = circle.combineMultiplications();
+  circle = circle.simplify();
   print(circle.toString(spec: printer));
 
   print('substituting y');
   circle = circle.substitute({'y': line});
   print(circle.toString(spec: printer));
 
-  print('distributing exponent');
-  circle = circle.distributeExponent();
-  print(circle.toString(spec: printer));
-
-  print('Dissolve minus');
-  circle = circle.factorOutMinus().dropMinus();
-  print(circle.toString(spec: printer));
-
-  print('expand multiplications');
-  circle = circle.expandMultiplications();
-  circle = circle.combineMultiplications();
-  print(circle.toString(spec: printer));
-
-  print('Combine additions');
-  circle = circle.combineAddition();
-  print(circle.toString(spec: printer));
+  circle = circle.simplify(dropMinus: true);
+  print(circle);
 
   final quad = circle.asQuadratic(x);
   print(quad);
 }
 
-final printer = EquationPrintSpec(times: '');
+final printer = EquationPrintSpec();

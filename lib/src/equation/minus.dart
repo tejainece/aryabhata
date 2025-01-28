@@ -115,6 +115,9 @@ class Minus extends Eq {
       Minus(expression.expandMultiplications(depth: depth));
 
   @override
+  Eq expandPowers({int? depth}) => Minus(expression.expandPowers(depth: depth));
+
+  @override
   Eq distributeExponent({int? depth}) =>
       Minus(expression.distributeExponent(depth: depth));
 
@@ -188,7 +191,13 @@ class Minus extends Eq {
   bool canCombineMultiplications() => expression.canCombineMultiplications();
 
   @override
+  bool canExpandMultiplications() => expression.canExpandMultiplications();
+
+  @override
   bool canCombinePowers() => expression.canCombinePowers();
+
+  @override
+  bool canExpandPowers() => expression.canExpandPowers();
 
   @override
   bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
@@ -200,7 +209,7 @@ class Minus extends Eq {
   Simplification? canSimplify() {
     final s = expression.canSimplify();
     if (s != null) return s;
-    if(canDissolveMinus()) return Simplification.dissolveMinus;
+    if (canDissolveMinus()) return Simplification.dissolveMinus;
     return null;
   }
 

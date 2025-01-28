@@ -74,7 +74,7 @@ class Times extends Eq {
       if (depth < 0) return this;
     }
     final ret = <Eq>[];
-    num constant = 0;
+    num constant = 1;
     for (var e in expressions) {
       e = e.dissolveConstants(depth: depth);
       final c = e.toConstant();
@@ -152,13 +152,32 @@ class Times extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-
-    Plus ret = Plus([expressions.first.expandMultiplications(depth: depth)]);
-    for (final e in expressions.skip(1)) {
+    final list = <Eq>[];
+    bool minus = false;
+    for (var e in expressions) {
+      e = e.expandMultiplications(depth: depth).dissolveMinus(depth: 1);
+      if (e is Minus) {
+        e = e.expression;
+        minus = !minus;
+      }
+      if (e is Times) {
+        list.addAll(e.expressions);
+      } else {
+        list.add(e);
+      }
+    }
+    Plus ret = Plus([list.first]);
+    for (final e in list.skip(1)) {
       ret = ret.expandingMultiply(e);
     }
     if (ret.expressions.length == 1) {
+      if (minus) {
+        return Minus(ret.expressions.first);
+      }
       return ret.expressions.first;
+    }
+    if (minus) {
+      return Minus(ret);
     }
     return ret;
   }
@@ -297,6 +316,15 @@ class Times extends Eq {
   }
 
   @override
+  Eq expandPowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Times(expressions.map((e) => e.expandPowers(depth: depth)));
+  }
+
+  @override
   Eq factorOutAddition() =>
       Times(expressions.map((e) => e.factorOutAddition()));
 
@@ -388,12 +416,14 @@ class Times extends Eq {
   bool canDissolveConstants() {
     if (expressions.length == 1) return expressions.first.toConstant() != null;
     int countConstants = 0;
-    for (final e in expressions) {
+    for (int i = 0; i < expressions.length; i++) {
+      final e = expressions[i];
       if (e.canDissolveConstants()) return true;
       final c = e.toConstant();
       if (c == null) continue;
+      if (i != 0) return true;
       if (c.isEqual(1)) return true;
-      if (e.toConstant() != null) countConstants++;
+      countConstants++;
     }
     return countConstants > 1;
   }
@@ -413,15 +443,32 @@ class Times extends Eq {
       if (e.canCombineMultiplications()) return true;
     }
     for (int i = 0; i < expressions.length; i++) {
+      final a = expressions[i];
       for (int j = i + 1; j < expressions.length; j++) {
-        final tmp = tryCombineMultiplicativeTerms(
-          expressions[i],
-          expressions[j],
-        );
+        final b = expressions[j];
+        final tmp = tryCombineMultiplicativeTerms(a, b);
         if (tmp != null) return true;
       }
     }
     return false;
+  }
+
+  @override
+  bool canExpandMultiplications() {
+    final list = <Eq>[];
+    for (var e in expressions) {
+      e = e.expandMultiplications().dissolveMinus(depth: 1);
+      if (e is Minus) {
+        e = e.expression;
+      }
+      if (e is Times) {
+        list.addAll(e.expressions);
+      } else {
+        list.add(e);
+      }
+    }
+    if (list.length < 2) return false;
+    return list.any((e) => e is Plus);
   }
 
   @override
@@ -457,6 +504,9 @@ class Times extends Eq {
   }
 
   @override
+  bool canExpandPowers() => expressions.any((e) => e.canExpandPowers());
+
+  @override
   bool canDissolvePowerOfPower() {
     for (final e in expressions) {
       if (e.canDissolvePowerOfPower()) return true;
@@ -480,11 +530,10 @@ class Times extends Eq {
     }
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
-    if (canDistributeExponent()) return Simplification.distributeExponent;
     if (canCombineMultiplications()) {
       return Simplification.combineMultiplications;
     }
-    if (canCombinePowers()) return Simplification.combinePowers;
+    if (canExpandMultiplications()) return Simplification.expandMultiplications;
     return null;
   }
 

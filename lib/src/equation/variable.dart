@@ -47,6 +47,9 @@ class Variable extends Eq {
   Eq combinePowers({int? depth}) => this;
 
   @override
+  Eq expandPowers({int? depth}) => this;
+
+  @override
   Eq factorOutAddition() => this;
 
   @override
@@ -96,7 +99,13 @@ class Variable extends Eq {
   bool canCombineMultiplications() => false;
 
   @override
+  bool canExpandMultiplications() => false;
+
+  @override
   bool canCombinePowers() => false;
+
+  @override
+  bool canExpandPowers() => false;
 
   @override
   bool canDissolvePowerOfPower() => false;

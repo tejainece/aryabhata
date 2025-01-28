@@ -82,6 +82,7 @@ abstract class Eq {
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
   Eq expandMultiplications({int? depth});
 
+  // TODO implement depth
   /// x + (1 + y) - (2 + y) = x - y - 1
   Eq combineAddition();
 
@@ -98,6 +99,9 @@ abstract class Eq {
 
   /// (a+b)/x = a/x + b/x
   Eq expandDivision({int? depth});
+
+  /// (a+b)^2 = a^2+2ab+b^2
+  Eq expandPowers({int? depth});
 
   /// ((x * y)/z) ** 2 = x**2 * y**2 / z**2
   Eq distributeExponent({int? depth});
@@ -136,7 +140,13 @@ abstract class Eq {
 
   bool canCombineMultiplications();
 
+  bool canExpandMultiplications();
+
+  // TODO bool canExpandDivision();
+
   bool canCombinePowers();
+
+  bool canExpandPowers();
 
   bool canDissolvePowerOfPower();
 
@@ -144,7 +154,7 @@ abstract class Eq {
 
   Simplification? canSimplify();
 
-  Eq simplify() {
+  Eq simplify({bool dropMinus = false}) {
     Eq ret = this;
     for (
       Simplification? s = ret.canSimplify();
@@ -159,14 +169,21 @@ abstract class Eq {
         ret = ret.combineAddition();
       } else if (s == Simplification.combineMultiplications) {
         ret = ret.combineMultiplications();
-      } else if(s == Simplification.combinePowers) {
+      } else if(s == Simplification.expandMultiplications) {
+        ret = ret.expandMultiplications();
+      } /*else if(s == Simplification.combinePowers) {
         ret = ret.combinePowers();
+      }*/ else if(s == Simplification.expandPowers) {
+        ret = ret.expandPowers();
       } else if (s == Simplification.dissolvePowerOfPower) {
         ret = ret.dissolvePowerOfPower();
       } else if(s == Simplification.distributeExponent) {
         ret = ret.distributeExponent();
       } else {
         throw UnimplementedError('$s');
+      }
+      if (dropMinus) {
+        ret = ret.dropMinus();
       }
     }
     return ret;
@@ -178,30 +195,30 @@ abstract class Eq {
     if (simplified is! Plus) {
       throw UnimplementedError();
     }
-    Eq a = Constant(0);
-    Eq b = Constant(0);
-    Eq c = Constant(0);
+    final a = <Eq>[];
+    final b = <Eq>[];
+    final c = <Eq>[];
 
     for (var term in simplified.expressions) {
       if (!term.hasVariable(x)) {
-        c += term;
+        c.add(term);
         continue;
       }
       Eq tmp = (term / x.pow(Constant(2)));
       tmp = tmp.simplify();
       if (!tmp.hasVariable(x)) {
-        a += tmp;
+        a.add(tmp);
         continue;
       }
       tmp = (term / x).simplify();
       if (!tmp.hasVariable(x)) {
-        b += tmp;
+        b.add(tmp);
         continue;
       }
       throw UnsupportedError('$term not a polynomial');
     }
 
-    return Quadratic(a, b, c);
+    return Quadratic(Plus(a), Plus(b), Plus(c));
   }
 
   /*
@@ -238,7 +255,10 @@ enum Simplification {
   dissolveConstants,
   combineAdditions,
   combineMultiplications,
-  combinePowers,
+  expandMultiplications,
+  expandDivision,
+  // combinePowers,
+  expandPowers,
   dissolvePowerOfPower,
   distributeExponent,
 }

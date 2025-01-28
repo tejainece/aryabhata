@@ -37,6 +37,9 @@ class Imaginary extends Eq {
   Eq combinePowers({int? depth}) => this;
 
   @override
+  Eq expandPowers({int? depth}) => this;
+
+  @override
   List<Eq> multiplicativeTerms() => [this];
 
   @override
@@ -79,7 +82,13 @@ class Imaginary extends Eq {
   bool canCombineMultiplications() => false;
 
   @override
+  bool canExpandMultiplications() => false;
+
+  @override
   bool canCombinePowers() => false;
+
+  @override
+  bool canExpandPowers() => false;
 
   @override
   bool canDissolvePowerOfPower() => false;

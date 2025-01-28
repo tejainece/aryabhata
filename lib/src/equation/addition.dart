@@ -101,7 +101,15 @@ class Plus extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    return Plus(expressions.map((e) => e.dissolveMinus(depth: depth)));
+    final list = expressions.map((e) => e.dissolveMinus(depth: depth));
+    final count = list.fold(
+      0,
+      (int count, Eq v) => count + (v is Minus ? 1 : 0),
+    );
+    if (count > list.length / 2) {
+      return Minus(Plus(list.map((e) => e is Minus ? e.expression : Minus(e))));
+    }
+    return Plus(list);
   }
 
   @override
@@ -111,7 +119,7 @@ class Plus extends Eq {
   Eq combineAddition() {
     var ret = <Eq>[];
     for (var term in expressions) {
-      term = term.dissolveMinus(depth: 1);
+      term = term.combineAddition().dissolveMinus(depth: 1);
       if (term is Plus) {
         ret.addAll(term.expressions);
         continue;
@@ -249,7 +257,7 @@ class Plus extends Eq {
   (num, Plus) separateConstant() {
     final separated = expressions.map((e) => e.separateConstant()).toList();
     final constants = separated.map((e) => e.$1).toList();
-    num gcd = gcdAll(constants);
+    num gcd = gcdAll(constants.map((e) => e.abs()));
     // Separate sign
     final numNeg = constants.fold(0, (int v, num c) => c.isNegative ? ++v : v);
     if (numNeg > constants.length / 2) {
@@ -257,7 +265,13 @@ class Plus extends Eq {
     }
     return (
       gcd,
-      Plus(separated.map((e) => (Constant(e.$1 / gcd) * e.$2).dissolveMinus())),
+      Plus(
+        separated.map((e) {
+          final c = e.$1 / gcd;
+          if (c.isEqual(1)) return e.$2;
+          return (Constant(c) * e.$2).dissolveMinus(depth: 1);
+        }),
+      ),
     );
   }
 
@@ -268,6 +282,15 @@ class Plus extends Eq {
       if (depth < 0) return this;
     }
     return Plus(expressions.map((e) => e.expandMultiplications(depth: depth)));
+  }
+
+  @override
+  Eq expandPowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Plus(expressions.map((e) => e.expandPowers(depth: depth)));
   }
 
   @override
@@ -403,10 +426,12 @@ class Plus extends Eq {
 
   @override
   bool canDissolveMinus() {
+    int countMinus = 0;
     for (final e in expressions) {
       if (e.canDissolveMinus()) return true;
+      if (e is Minus) countMinus++;
     }
-    return false;
+    return countMinus > expressions.length / 2;
   }
 
   @override
@@ -414,7 +439,14 @@ class Plus extends Eq {
       expressions.any((e) => e.canCombineMultiplications());
 
   @override
+  bool canExpandMultiplications() =>
+      expressions.any((e) => e.canExpandMultiplications());
+
+  @override
   bool canCombinePowers() => expressions.any((e) => e.canCombinePowers());
+
+  @override
+  bool canExpandPowers() => expressions.any((e) => e.canExpandPowers());
 
   @override
   bool canDissolvePowerOfPower() {
@@ -437,18 +469,19 @@ class Plus extends Eq {
     final sb = StringBuffer();
     sb.write(expressions.first.toString(spec: spec));
     for (int i = 1; i < expressions.length; i++) {
-      final (c, e) = expressions[i].separateConstant();
+      var (c, e) = expressions[i].separateConstant();
       if (c.isNegative) {
         sb.write(spec.minus);
       } else {
         sb.write(spec.plus);
       }
+      c = c.abs();
       bool hasC = false;
-      if ((c.abs() - 1).abs() > 1e-6) {
-        sb.write(c.abs().stringMaybeInt);
+      if ((c - 1).abs() > 1e-6) {
+        sb.write(c.stringMaybeInt);
         hasC = true;
       }
-      if (!e.isSame(Constant(1)) || !hasC) {
+      if (!(e.toConstant()?.isEqual(1) ?? false) || !hasC) {
         if (hasC) sb.write(spec.times);
         sb.write(e.toString(spec: spec));
       }

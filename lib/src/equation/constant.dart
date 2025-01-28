@@ -43,9 +43,6 @@ class Constant extends Eq {
   Eq expandMultiplications({int? depth}) => this;
 
   @override
-  Eq distributeExponent({int? depth}) => this;
-
-  @override
   Eq expandDivision({int? depth}) => this;
 
   @override
@@ -55,7 +52,13 @@ class Constant extends Eq {
   Eq combinePowers({int? depth}) => this;
 
   @override
+  Eq expandPowers({int? depth}) => this;
+
+  @override
   Eq dissolvePowerOfPower({int? depth}) => this;
+
+  @override
+  Eq distributeExponent({int? depth}) => this;
 
   @override
   Eq factorOutAddition() => this;
@@ -105,7 +108,13 @@ class Constant extends Eq {
   bool canCombineMultiplications() => false;
 
   @override
+  bool canExpandMultiplications() => false;
+
+  @override
   bool canCombinePowers() => false;
+
+  @override
+  bool canExpandPowers() => false;
 
   @override
   bool canDissolvePowerOfPower() => false;

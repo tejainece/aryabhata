@@ -108,20 +108,29 @@ class Power extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
+    return Power(
+      base.expandMultiplications(depth: depth),
+      exponent.expandMultiplications(depth: depth),
+    );
+  }
 
-    var base = this.base.expandMultiplications(depth: depth);
-    if (exponent.simplify().isConstant()) {
-      final c = exponent.simplify().toConstant()!;
-      if (!c.isInt) {
-        return Power(base, Constant(c).dissolveMinus());
-      }
-      Eq ret = base;
-      for (int i = 1; i < c; i++) {
-        ret = (ret * base).expandMultiplications(depth: depth);
-      }
-      return ret;
+  @override
+  Eq expandPowers({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
     }
-    return Power(base, exponent.expandMultiplications(depth: depth));
+    var base = this.base.expandPowers(depth: depth);
+    var exponent = this.exponent.expandPowers(depth: depth);
+    final ec = exponent.toConstant();
+    if (ec == null || !ec.isInt) return Power(base, exponent);
+    Eq ret = base;
+    bool isDivision = ec.isNegative;
+    for (int i = 1; i < ec.round().abs(); i++) {
+      ret = (ret * base).expandMultiplications(depth: depth);
+    }
+    if (isDivision) return Power(ret, -one);
+    return ret;
   }
 
   @override
@@ -309,11 +318,10 @@ class Power extends Eq {
   @override
   bool isSame(Eq otherSimplified, [double epsilon = 1e-6]) {
     final thisSimplified = simplify();
-    final other = otherSimplified.simplify();
-    if (thisSimplified is! Power) {
-      return thisSimplified.isSame(other, epsilon);
-    }
     otherSimplified = otherSimplified.simplify();
+    if (thisSimplified is! Power) {
+      return thisSimplified.isSame(otherSimplified, epsilon);
+    }
     if (otherSimplified is! Power) {
       return false;
     }
@@ -345,8 +353,27 @@ class Power extends Eq {
       base.canCombineMultiplications() || exponent.canCombineMultiplications();
 
   @override
+  bool canExpandMultiplications() =>
+      base.canExpandMultiplications() || exponent.canExpandMultiplications();
+
+  @override
   bool canCombinePowers() =>
       base.canCombinePowers() || exponent.canCombinePowers();
+
+  @override
+  bool canExpandPowers() {
+    if (this.base.canExpandPowers() || exponent.canExpandPowers()) {
+      return true;
+    }
+    final ec = exponent.toConstant();
+    if (ec == null || !ec.isInt) return false;
+    var base = this.base.dissolveMinus(depth: 1);
+    if (base is Minus) {
+      base = base.expression;
+    }
+    if (base is! Plus || base.expressions.length < 2) return false;
+    return true;
+  }
 
   @override
   bool canDissolvePowerOfPower() {
@@ -376,6 +403,7 @@ class Power extends Eq {
     if (canDissolveToConstant()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
     if (canDistributeExponent()) return Simplification.distributeExponent;
+    if (canExpandPowers()) return Simplification.expandPowers;
     if (canDissolvePowerOfPower()) return Simplification.dissolvePowerOfPower;
     return null;
   }
@@ -431,7 +459,7 @@ class Power extends Eq {
   }
 
   static bool canCombinePower(Power a, Power b) {
-    return !a.exponent.isSame(b.exponent);
+    return a.exponent.isSame(b.exponent);
   }
 
   static Power? tryCombinePower(Power a, Power b) {
