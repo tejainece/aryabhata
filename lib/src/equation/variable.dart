@@ -153,3 +153,5 @@ const x = Variable._('x');
 const y = Variable._('y');
 
 const z = Variable._('z');
+
+const theta = Variable._('θ');

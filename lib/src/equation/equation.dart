@@ -161,6 +161,7 @@ abstract class Eq {
       s != null;
       s = ret.canSimplify()
     ) {
+      // print('$s: $ret');
       if (s == Simplification.dissolveMinus) {
         ret = ret.dissolveMinus();
       } else if (s == Simplification.dissolveConstants) {

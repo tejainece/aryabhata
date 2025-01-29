@@ -317,7 +317,11 @@ class Plus extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    return Plus(expressions.map((e) => e.combineMultiplications(depth: depth)));
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.combineMultiplications(depth: depth));
+    }
+    return Plus(list);
   }
 
   @override

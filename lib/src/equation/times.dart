@@ -249,7 +249,11 @@ class Times extends Eq {
     if (eq is! Times) {
       return eq.combineMultiplications(depth: depth).withConstant(c);
     }
-    final ret = eq.expressions.toList();
+    final ret = <Eq>[];
+    for (var e in eq.expressions) {
+      ret.add(e.combineMultiplications(depth: depth));
+    }
+    
     for (int i = 0; i < ret.length; i++) {
       for (int j = i + 1; j < ret.length; j++) {
         final tmp = tryCombineMultiplicativeTerms(ret[i], ret[j]);
