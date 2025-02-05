@@ -64,11 +64,14 @@ class Constant extends Eq {
   Eq factorOutAddition() => this;
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() => Times([this]);
+
+  @override
+  Eq reduceDivisions({int? depth}) => this;
 
   @override
   Eq? tryCancelDivision(Eq other) {
-    assert(other.isSingle);
+    other = other.simplify();
     if (other is Constant) {
       final res = value / other.value;
       if (!res.isInt) return null;
@@ -105,10 +108,16 @@ class Constant extends Eq {
   bool canDissolveMinus() => value.isNegative;
 
   @override
+  bool canFactorOutAddition() => false;
+
+  @override
   bool canCombineMultiplications() => false;
 
   @override
   bool canExpandMultiplications() => false;
+
+  @override
+  bool canReduceDivisions() => false;
 
   @override
   bool canCombinePowers() => false;
@@ -169,7 +178,14 @@ extension NumExt on num {
 
   int? get tryToInt => isInt ? round() : null;
 
-  String get stringMaybeInt => isInt ? round().toString() : toString();
+  String get stringMaybeInt {
+    if(isInt) {
+      return round().toString();
+    } else if(isInfinite) {
+      return '∞';
+    }
+    return toString();
+  }
 
   bool isEqual(num other, [double epsilon = 1e-6]) {
     if (isNaN || other.isNaN) return false;

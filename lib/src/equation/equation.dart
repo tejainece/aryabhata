@@ -1,11 +1,4 @@
-import 'package:equation/src/printer.dart';
-
-import 'addition.dart';
-import 'constant.dart';
-import 'minus.dart';
-import 'power.dart';
-import 'times.dart';
-import 'variable.dart';
+import 'package:equation/equation.dart';
 
 export 'addition.dart';
 export 'constant.dart';
@@ -15,17 +8,6 @@ export 'power.dart';
 export 'times.dart';
 export 'trignometric.dart';
 export 'variable.dart';
-
-class Quadratic {
-  final Eq a;
-  final Eq b;
-  final Eq c;
-
-  Quadratic(this.a, this.b, this.c);
-
-  @override
-  String toString() => 'a= $a, b= $b, c= $c';
-}
 
 abstract class Eq {
   const Eq();
@@ -117,7 +99,9 @@ abstract class Eq {
 
   Eq factorOutAddition();
 
-  List<Eq> multiplicativeTerms();
+  Times multiplicativeTerms();
+
+  Eq reduceDivisions({int? depth});
 
   Eq? tryCancelDivision(Eq other);
 
@@ -138,11 +122,15 @@ abstract class Eq {
 
   bool canDissolveMinus();
 
+  bool canFactorOutAddition();
+
   bool canCombineMultiplications();
 
   bool canExpandMultiplications();
 
   // TODO bool canExpandDivision();
+
+  bool canReduceDivisions();
 
   bool canCombinePowers();
 
@@ -170,15 +158,19 @@ abstract class Eq {
         ret = ret.combineAddition();
       } else if (s == Simplification.combineMultiplications) {
         ret = ret.combineMultiplications();
-      } else if(s == Simplification.expandMultiplications) {
+      } else if (s == Simplification.expandMultiplications) {
         ret = ret.expandMultiplications();
-      } /*else if(s == Simplification.combinePowers) {
+      } else if (s == Simplification.reduceDivisions) {
+        ret = ret.reduceDivisions();
+      }
+      /*else if(s == Simplification.combinePowers) {
         ret = ret.combinePowers();
-      }*/ else if(s == Simplification.expandPowers) {
+      }*/
+      else if (s == Simplification.expandPowers) {
         ret = ret.expandPowers();
       } else if (s == Simplification.dissolvePowerOfPower) {
         ret = ret.dissolvePowerOfPower();
-      } else if(s == Simplification.distributeExponent) {
+      } else if (s == Simplification.distributeExponent) {
         ret = ret.distributeExponent();
       } else {
         throw UnimplementedError('$s');
@@ -258,6 +250,7 @@ enum Simplification {
   combineMultiplications,
   expandMultiplications,
   expandDivision,
+  reduceDivisions,
   // combinePowers,
   expandPowers,
   dissolvePowerOfPower,

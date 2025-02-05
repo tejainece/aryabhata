@@ -28,9 +28,18 @@ void main() {
     print(eq);
   }*/
 
-  {
+  /*{
     Eq eq = x.pow(Eq.c(2)).lpow(Eq.c(-1));
     eq = eq.simplify();
     print(eq);
+  }*/
+
+  {
+    Eq eq = x.pow(Eq.c(1));
+    print(eq.simplify());
+    print(eq.canDissolveConstants());
+    print(eq.dissolveConstants());
   }
+
+
 }

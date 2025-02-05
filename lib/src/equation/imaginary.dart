@@ -40,7 +40,7 @@ class Imaginary extends Eq {
   Eq expandPowers({int? depth}) => this;
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() => Times([this]);
 
   @override
   Eq factorOutAddition() => this;
@@ -53,6 +53,9 @@ class Imaginary extends Eq {
 
   @override
   Eq dissolvePowerOfPower({int? depth}) => this;
+
+  @override
+  Eq reduceDivisions({int? depth}) => this;
 
   @override
   Eq? tryCancelDivision(Eq other) => other is Imaginary ? one : null;
@@ -79,10 +82,16 @@ class Imaginary extends Eq {
   bool canDissolveMinus() => false;
 
   @override
+  bool canFactorOutAddition() => false;
+
+  @override
   bool canCombineMultiplications() => false;
 
   @override
   bool canExpandMultiplications() => false;
+
+  @override
+  bool canReduceDivisions() => false;
 
   @override
   bool canCombinePowers() => false;

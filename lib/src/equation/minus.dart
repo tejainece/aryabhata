@@ -105,7 +105,17 @@ class Minus extends Eq {
   }
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() {
+    final e = dissolveConstants(depth: 1);
+    if (e is Minus) {
+      final inner = e.expression;
+      if (inner.toConstant()?.isEqual(1) ?? false) {
+        return Times([e]);
+      }
+      return Times([-one, inner.multiplicativeTerms()]);
+    }
+    return e.multiplicativeTerms();
+  }
 
   @override
   Eq combineAddition() => Minus(expression.combineAddition());
@@ -151,9 +161,14 @@ class Minus extends Eq {
 
   @override
   Eq? tryCancelDivision(Eq other) {
-    // TODO: implement tryDivide
-    throw UnimplementedError();
+    final ret = expression.tryCancelDivision(other);
+    if (ret == null) return null;
+    return Minus(ret);
   }
+
+  @override
+  Eq reduceDivisions({int? depth}) =>
+      Minus(expression.reduceDivisions(depth: depth));
 
   @override
   bool get isSingle => false;
@@ -188,10 +203,16 @@ class Minus extends Eq {
   }
 
   @override
+  bool canFactorOutAddition() => expression.canFactorOutAddition();
+
+  @override
   bool canCombineMultiplications() => expression.canCombineMultiplications();
 
   @override
   bool canExpandMultiplications() => expression.canExpandMultiplications();
+
+  @override
+  bool canReduceDivisions() => expression.canReduceDivisions();
 
   @override
   bool canCombinePowers() => expression.canCombinePowers();

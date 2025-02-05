@@ -84,6 +84,7 @@ class Times extends Eq {
       }
       ret.add(e);
     }
+    // TODO try to keep constants integers
     if (ret.isEmpty) {
       return Constant(constant);
     } else if (!constant.isEqual(1)) {
@@ -253,7 +254,7 @@ class Times extends Eq {
     for (var e in eq.expressions) {
       ret.add(e.combineMultiplications(depth: depth));
     }
-    
+
     for (int i = 0; i < ret.length; i++) {
       for (int j = i + 1; j < ret.length; j++) {
         final tmp = tryCombineMultiplicativeTerms(ret[i], ret[j]);
@@ -325,7 +326,11 @@ class Times extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    return Times(expressions.map((e) => e.expandPowers(depth: depth)));
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.expandPowers(depth: depth));
+    }
+    return Times(list);
   }
 
   @override
@@ -333,12 +338,17 @@ class Times extends Eq {
       Times(expressions.map((e) => e.factorOutAddition()));
 
   @override
-  List<Eq> multiplicativeTerms() => expressions.toList();
+  Times multiplicativeTerms() {
+    final ret = <Eq>[];
+    for (var e in expressions) {
+      ret.add(e.multiplicativeTerms());
+    }
+    return Times(ret);
+  }
 
   @override
   Eq? tryCancelDivision(Eq other) {
-    assert(other.isSingle);
-    final ret = expressions.toList();
+    final ret = multiplicativeTerms().expressions.toList();
     for (int i = 0; i < ret.length; i++) {
       final v = ret[i];
       final d = v.tryCancelDivision(other);
@@ -348,9 +358,27 @@ class Times extends Eq {
       } else {
         ret.removeAt(i);
       }
+      if (ret.length == 1) return ret.first;
       return Times(ret);
     }
     return null;
+  }
+
+  @override
+  Eq reduceDivisions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final parts = <Eq>[];
+    for (var e in expressions) {
+      parts.addAll(
+        e.reduceDivisions(depth: depth).multiplicativeTerms().expressions,
+      );
+    }
+    var reduced = Times(parts).combineMultiplications(depth: 1);
+    reduced = reduced.dissolveConstants(depth: 1);
+    return reduced;
   }
 
   @override
@@ -375,10 +403,10 @@ class Times extends Eq {
   @override
   bool isSame(Eq otherSimplified, [double epsilon = 1e-6]) {
     final thisSimplified = simplify();
+    otherSimplified = otherSimplified.simplify();
     if (thisSimplified is! Times) {
       return thisSimplified.isSame(otherSimplified, epsilon);
     }
-    otherSimplified = otherSimplified.simplify();
     if (otherSimplified is! Times) {
       // TODO handle UnaryMinus
       return false;
@@ -442,7 +470,18 @@ class Times extends Eq {
   }
 
   @override
+  bool canFactorOutAddition() {
+    for (final e in expressions) {
+      if (e.canFactorOutAddition()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
   bool canCombineMultiplications() {
+    if (expressions.length == 1) return true;
     for (final e in expressions) {
       if (e.canCombineMultiplications()) return true;
     }
@@ -473,6 +512,22 @@ class Times extends Eq {
     }
     if (list.length < 2) return false;
     return list.any((e) => e is Plus);
+  }
+
+  @override
+  bool canReduceDivisions() {
+    final parts = <Eq>[];
+    for (var e in expressions) {
+      if (e.canReduceDivisions()) return true;
+      parts.addAll(e.multiplicativeTerms().expressions);
+    }
+    if (Times(parts).canCombineMultiplications()) {
+      return true;
+    }
+    if (Times(parts).canDissolveConstants()) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -538,6 +593,7 @@ class Times extends Eq {
       return Simplification.combineMultiplications;
     }
     if (canExpandMultiplications()) return Simplification.expandMultiplications;
+    if (canReduceDivisions()) return Simplification.reduceDivisions;
     return null;
   }
 

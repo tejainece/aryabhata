@@ -20,12 +20,22 @@ class _TestCase {
 
     _TestCase(x.pow(y) * x.pow(y), x.pow(Eq.c(2) * y)),
   ];
+
+  static final extras = <_TestCase>[
+    _TestCase(Times([x]), x),
+    ];
 }
 
 void main() {
   group('Times.combineMultiplications', () {
     test('test', () {
       for (final tc in _TestCase.cases) {
+        final res = tc.eq.combineMultiplications();
+        expect(res, EqEqualityMatcher(tc.res));
+      }
+    });
+    test('extras', () {
+      for (final tc in _TestCase.extras) {
         final res = tc.eq.combineMultiplications();
         expect(res, EqEqualityMatcher(tc.res));
       }

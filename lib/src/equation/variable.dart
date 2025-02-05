@@ -53,7 +53,7 @@ class Variable extends Eq {
   Eq factorOutAddition() => this;
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() => Times([this]);
 
   @override
   Eq dissolveMinus({int? depth}) => this;
@@ -65,10 +65,12 @@ class Variable extends Eq {
   Eq distributeMinus() => this;
 
   @override
+  Eq reduceDivisions({int? depth}) => this;
+
+  @override
   Eq? tryCancelDivision(Eq other) {
-    assert(other.isSingle);
-    if (other is! Variable) return null;
-    return other.name == name ? Constant(1.0) : null;
+    if (other is! Variable || other.name != name) return null;
+    return Constant(1.0);
   }
 
   @override
@@ -96,10 +98,16 @@ class Variable extends Eq {
   bool canDissolveMinus() => false;
 
   @override
+  bool canFactorOutAddition() => false;
+
+  @override
   bool canCombineMultiplications() => false;
 
   @override
   bool canExpandMultiplications() => false;
+
+  @override
+  bool canReduceDivisions() => false;
 
   @override
   bool canCombinePowers() => false;
@@ -153,5 +161,11 @@ const x = Variable._('x');
 const y = Variable._('y');
 
 const z = Variable._('z');
+
+const A = Variable._('A');
+
+const B = Variable._('B');
+
+const C = Variable._('C');
 
 const theta = Variable._('θ');

@@ -152,13 +152,30 @@ class Plus extends Eq {
   }
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() {
+    List<Times> parts =
+        expressions.map((e) => e.multiplicativeTerms()).toList();
+    List<Eq> ret = parts.toList();
+    final factors = <Eq>[];
+    for (final possibles in parts) {
+      for (var possible in possibles.expressions) {
+        final object = tryFactorizeBy(possible, ret);
+        if (object == null) continue;
+        factors.add(possible);
+        ret = object;
+      }
+    }
+    if (factors.isEmpty) {
+      return Times([this]);
+    }
+    return Times([...factors, Plus(ret)]);
+  }
 
   @override
   Eq factorOutAddition() {
     final factors = <Eq>[];
     var ret = expressions.toList();
-    final terms = expressions.first.multiplicativeTerms();
+    final terms = expressions.first.multiplicativeTerms().expressions;
     for (final t in terms) {
       if (t is Constant && t.value.isInt) {
         int c = t.value.round().abs();
@@ -190,7 +207,6 @@ class Plus extends Eq {
 
   static List<Eq>? tryFactorizeBy(Eq factor, List<Eq> eq) {
     // assert(factor.isSingle);
-
     final ret = <Eq>[];
     for (int i = 0; i < eq.length; i++) {
       final d = eq[i].tryCancelDivision(factor);
@@ -290,7 +306,11 @@ class Plus extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    return Plus(expressions.map((e) => e.expandPowers(depth: depth)));
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.expandPowers(depth: depth));
+    }
+    return Plus(list);
   }
 
   @override
@@ -330,7 +350,11 @@ class Plus extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    return Plus(expressions.map((e) => e.combinePowers(depth: depth)));
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.combinePowers(depth: depth));
+    }
+    return Plus(list);
   }
 
   @override
@@ -339,20 +363,35 @@ class Plus extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    return Plus(expressions.map((e) => e.dissolvePowerOfPower(depth: depth)));
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.dissolvePowerOfPower(depth: depth));
+    }
+    return Plus(list);
   }
 
   @override
   Eq? tryCancelDivision(Eq other) {
-    final ret = <Eq>[];
-    for (final e in expressions) {
-      final d = e.tryCancelDivision(other);
-      if (d == null) {
-        return null;
-      }
-      ret.add(d);
+    if (isSame(other)) return one;
+    if (isSame(Minus(other))) return -one;
+    final ret = tryFactorizeBy(other, expressions);
+    if (ret == null) {
+      return null;
     }
     return Plus(ret);
+  }
+
+  @override
+  Eq reduceDivisions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.reduceDivisions(depth: depth));
+    }
+    return Plus(list);
   }
 
   @override
@@ -389,10 +428,10 @@ class Plus extends Eq {
   @override
   bool isSame(Eq otherSimplified, [double epsilon = 1e-6]) {
     final thisSimplified = simplify();
+    otherSimplified = otherSimplified.simplify();
     if (thisSimplified is! Plus) {
       return thisSimplified.isSame(otherSimplified, epsilon);
     }
-    otherSimplified = otherSimplified.simplify();
     if (otherSimplified is! Plus) {
       // TODO handle UnaryMinus
       return false;
@@ -439,12 +478,22 @@ class Plus extends Eq {
   }
 
   @override
+  bool canFactorOutAddition() {
+    throw UnimplementedError();
+    // TODO
+    return false;
+  }
+
+  @override
   bool canCombineMultiplications() =>
       expressions.any((e) => e.canCombineMultiplications());
 
   @override
   bool canExpandMultiplications() =>
       expressions.any((e) => e.canExpandMultiplications());
+
+  @override
+  bool canReduceDivisions() => expressions.any((e) => e.canReduceDivisions());
 
   @override
   bool canCombinePowers() => expressions.any((e) => e.canCombinePowers());

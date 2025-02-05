@@ -18,7 +18,14 @@ void main() {
 
   circle = circle.simplify(dropMinus: true);
   print(circle);
+  print('-----------------------------------------------------------------');
 
   final quad = circle.asQuadratic(x);
   print(quad);
+  print('-----------------------------------------------------------------');
+
+
+  final [sol1, sol2] = (quad.solve());
+  print(sol1.simplify(dropMinus: true));
+  // print(sol2.simplify(dropMinus: true));
 }

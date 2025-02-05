@@ -15,7 +15,7 @@ class EqEqualityMatcher extends Matcher {
   @override
   bool matches(other, Map<dynamic, dynamic> matchState) {
     if (other is! Eq) return false;
-    if(expected is Constant && (expected as Constant).value.isNaN) {
+    if (expected is Constant && (expected as Constant).value.isNaN) {
       return other is Constant && other.value.isNaN;
     }
     bool isMatch = other.isSame(expected, epsilon);

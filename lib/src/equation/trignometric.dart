@@ -4,6 +4,8 @@ import 'package:equation/equation.dart';
 
 // TODO implement log
 
+// TODO implement angle simplification
+
 abstract class Trig extends Eq {
   Eq get expression;
 
@@ -14,7 +16,7 @@ abstract class Trig extends Eq {
   Eq dropMinus() => this;
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() => Times([this]);
 
   @override
   bool get isLone => true;
@@ -23,10 +25,7 @@ abstract class Trig extends Eq {
   bool get isSingle => true;
 
   @override
-  Eq? tryCancelDivision(Eq other) {
-    assert(other.isSingle);
-    return isSame(other) ? Constant(1.0) : null;
-  }
+  Eq? tryCancelDivision(Eq other) => isSame(other) ? Constant(1.0) : null;
 
   @override
   bool canDissolveConstants() {
@@ -41,10 +40,16 @@ abstract class Trig extends Eq {
   }
 
   @override
+  bool canFactorOutAddition() => expression.canFactorOutAddition();
+
+  @override
   bool canCombineMultiplications() => expression.canCombineMultiplications();
 
   @override
   bool canExpandMultiplications() => expression.canExpandMultiplications();
+
+  @override
+  bool canReduceDivisions() => expression.canReduceDivisions();
 
   @override
   bool canCombinePowers() => expression.canCombinePowers();
@@ -177,6 +182,10 @@ class Cos extends Trig {
     }
     return Cos(expression.expandDivision(depth: depth));
   }
+
+  @override
+  Eq reduceDivisions({int? depth}) =>
+      Cos(expression.reduceDivisions(depth: depth));
 
   @override
   Eq combineMultiplications({int? depth}) {
@@ -358,6 +367,10 @@ class Sin extends Trig {
   }
 
   @override
+  Eq reduceDivisions({int? depth}) =>
+      Sin(expression.reduceDivisions(depth: depth));
+
+  @override
   Eq combineMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -508,6 +521,10 @@ class Tan extends Trig {
     }
     return Tan(expression.expandDivision(depth: depth));
   }
+
+  @override
+  Eq reduceDivisions({int? depth}) =>
+      Tan(expression.reduceDivisions(depth: depth));
 
   @override
   Eq combineMultiplications({int? depth}) {

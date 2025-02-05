@@ -230,7 +230,9 @@ class Power extends Eq {
       Power(base.factorOutAddition(), exponent.factorOutAddition());
 
   @override
-  List<Eq> multiplicativeTerms() => [this];
+  Times multiplicativeTerms() => Times(
+    base.multiplicativeTerms().expressions.map((e) => Power(e, exponent)),
+  );
 
   @override
   Eq? tryCancelDivision(Eq other) {
@@ -264,6 +266,18 @@ class Power extends Eq {
     if (!base.isSame(other)) return null;
     if (exponent.isSame(one)) return one;
     return Power(base, exponent - one);
+  }
+
+  @override
+  Eq reduceDivisions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Power(
+      base.reduceDivisions(depth: depth),
+      exponent.reduceDivisions(depth: depth),
+    );
   }
 
   List<Power> splitPower() {
@@ -303,14 +317,6 @@ class Power extends Eq {
   bool hasVariable(Variable v) =>
       base.hasVariable(v) || exponent.hasVariable(v);
 
-  bool canDissolveToConstant() {
-    if (base.canDissolveConstants() || exponent.canDissolveConstants()) {
-      return true;
-    }
-    // TODO is this stackoverflow
-    return toConstant() != null;
-  }
-
   @override
   Eq substitute(Map<String, Eq> substitutions) =>
       Power(base.substitute(substitutions), exponent.substitute(substitutions));
@@ -334,7 +340,24 @@ class Power extends Eq {
     if (base.canDissolveConstants() || exponent.canDissolveConstants()) {
       return true;
     }
-    return toConstant() != null;
+    final bc = base.toConstant();
+    final ec = exponent.toConstant();
+    if ((bc?.isNaN ?? false) || (ec?.isNaN ?? false)) return true;
+    if (ec != null && bc != null) {
+      return true;
+    }
+    if (ec != null) {
+      if (ec == 0) {
+        return true;
+      } else if (ec == 1) {
+        return true;
+      }
+    }
+    if (bc != null) {
+      if (bc == 1) return true;
+      if (bc == 0) return true;
+    }
+    return false;
   }
 
   @override
@@ -349,12 +372,20 @@ class Power extends Eq {
   }
 
   @override
+  bool canFactorOutAddition() =>
+      base.canFactorOutAddition() || exponent.canFactorOutAddition();
+
+  @override
   bool canCombineMultiplications() =>
       base.canCombineMultiplications() || exponent.canCombineMultiplications();
 
   @override
   bool canExpandMultiplications() =>
       base.canExpandMultiplications() || exponent.canExpandMultiplications();
+
+  @override
+  bool canReduceDivisions() =>
+      base.canReduceDivisions() || exponent.canReduceDivisions();
 
   @override
   bool canCombinePowers() =>
@@ -366,7 +397,7 @@ class Power extends Eq {
       return true;
     }
     final ec = exponent.toConstant();
-    if (ec == null || !ec.isInt) return false;
+    if (ec == null || !ec.isInt || ec.round().isEqual(-1)) return false;
     var base = this.base.dissolveMinus(depth: 1);
     if (base is Minus) {
       base = base.expression;
@@ -400,7 +431,7 @@ class Power extends Eq {
   Simplification? canSimplify() {
     Simplification? s = base.canSimplify() ?? exponent.canSimplify();
     if (s != null) return s;
-    if (canDissolveToConstant()) return Simplification.dissolveConstants;
+    if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
     if (canDistributeExponent()) return Simplification.distributeExponent;
     if (canExpandPowers()) return Simplification.expandPowers;
