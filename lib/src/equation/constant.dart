@@ -37,7 +37,10 @@ class Constant extends Eq {
   Eq dropMinus() => this;
 
   @override
-  Eq combineAddition() => this;
+  Eq shrink({int? depth}) => this;
+
+  @override
+  Eq combineAdditions({int? depth}) => this;
 
   @override
   Eq expandMultiplications({int? depth}) => this;
@@ -102,10 +105,16 @@ class Constant extends Eq {
   }
 
   @override
+  bool canShrink() => false;
+
+  @override
   bool canDissolveConstants() => false;
 
   @override
   bool canDissolveMinus() => value.isNegative;
+
+  @override
+  bool canCombineAdditions() => false;
 
   @override
   bool canFactorOutAddition() => false;

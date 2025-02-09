@@ -16,4 +16,10 @@ void main() {
     final eq = (a + a * b)/(Eq.c(2) * a);
     print(eq.reduceDivisions());
   }*/
+
+  {
+    final eq = x / y / z;
+    final res = eq.reduceDivisions();
+    print(res);
+  }
 }

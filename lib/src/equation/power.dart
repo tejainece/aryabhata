@@ -82,13 +82,16 @@ class Power extends Eq {
     }
     var base = this.base.dissolveMinus(depth: depth);
     var exponent = this.exponent.dissolveMinus(depth: depth);
-    // (-x)^(2n) = x^(2n)
-    if (exponent.toConstant()?.tryToInt?.isEven ?? false) {
-      if (base is Minus) {
-        return Power(base.expression, exponent);
-      }
+    if (base is! Minus) {
+      return Power(base, exponent);
     }
-    return Power(base, exponent);
+    final ec = exponent.toConstant()?.tryToInt;
+    if (ec == null) return Power(base, exponent);
+    // (-x)^(2n) = x^(2n)
+    if (ec.isEven) {
+      return Power(base.expression, exponent);
+    }
+    return Times([-one, Power(base.expression, exponent)]);
   }
 
   @override
@@ -99,8 +102,25 @@ class Power extends Eq {
   Eq dropMinus() => this;
 
   @override
-  Eq combineAddition() =>
-      Power(base.combineAddition(), exponent.combineAddition());
+  Eq shrink({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Power(base.shrink(depth: depth), exponent.shrink(depth: depth));
+  }
+
+  @override
+  Eq combineAdditions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Power(
+      base.combineAdditions(depth: depth),
+      exponent.combineAdditions(depth: depth),
+    );
+  }
 
   @override
   Eq expandMultiplications({int? depth}) {
@@ -122,6 +142,7 @@ class Power extends Eq {
     }
     var base = this.base.expandPowers(depth: depth);
     var exponent = this.exponent.expandPowers(depth: depth);
+    if (base is! Plus) return Power(base, exponent);
     final ec = exponent.toConstant();
     if (ec == null || !ec.isInt) return Power(base, exponent);
     Eq ret = base;
@@ -154,7 +175,8 @@ class Power extends Eq {
           }),
         ]);
       }
-      return Power(Minus(base), exponent);
+      if (base.isSame(one)) return Power(base, exponent);
+      return Times([Power(-one, exponent), Power(base, exponent)]);
     }
     if (base is Times) {
       return Times(
@@ -236,9 +258,9 @@ class Power extends Eq {
 
   @override
   Eq? tryCancelDivision(Eq other) {
-    if (simplify().isSame(other.simplify())) return one;
-    assert(other.isSingle);
-    final list = splitPower().cast<Eq>();
+    other = other.simplify();
+    if (simplify().isSame(other)) return one;
+    final list = multiplicativeTerms().expressions.toList();
     if (list.length > 1) {
       for (int i = 0; i < list.length; i++) {
         final v = list[i];
@@ -278,22 +300,6 @@ class Power extends Eq {
       base.reduceDivisions(depth: depth),
       exponent.reduceDivisions(depth: depth),
     );
-  }
-
-  List<Power> splitPower() {
-    final base = this.base;
-    if (base is Times) {
-      return base.expressions.map((e) => Power(e, exponent)).toList();
-    } else if (base is Minus) {
-      final exp = base.expression;
-      if (exp is Times) {
-        return [
-          Power(Minus(exp.expressions.first), exponent),
-          ...exp.expressions.skip(1).map((e) => Power(e, exponent)),
-        ];
-      }
-    }
-    return [this];
   }
 
   Eq? get toDenominator {
@@ -365,11 +371,21 @@ class Power extends Eq {
     if (base.canDissolveMinus() || exponent.canDissolveMinus()) {
       return true;
     }
-    if (exponent.toConstant()?.tryToInt?.isEven ?? false) {
-      return base is Minus;
+    if (base is! Minus) return false;
+    final ec = exponent.toConstant();
+    if (ec == null) return false;
+    if (!ec.isInt) {
+      return false;
     }
-    return false;
+    return true;
   }
+
+  @override
+  bool canShrink() => base.canShrink() || exponent.canShrink();
+
+  @override
+  bool canCombineAdditions() =>
+      base.canCombineAdditions() || exponent.canCombineAdditions();
 
   @override
   bool canFactorOutAddition() =>
@@ -399,9 +415,9 @@ class Power extends Eq {
     final ec = exponent.toConstant();
     if (ec == null || !ec.isInt || ec.round().isEqual(-1)) return false;
     var base = this.base.dissolveMinus(depth: 1);
-    if (base is Minus) {
+    /*if (base is Minus) {
       base = base.expression;
-    }
+    }*/
     if (base is! Plus || base.expressions.length < 2) return false;
     return true;
   }
@@ -422,7 +438,7 @@ class Power extends Eq {
     }
     var exp = base;
     if (exp is Minus) {
-      exp = (base as Minus).expression;
+      return true;
     }
     return exp is Times;
   }
@@ -497,12 +513,5 @@ class Power extends Eq {
     // TODO dissolve powerOfPowers?
     if (!a.exponent.isSame(b.exponent)) return null;
     return Power(Times([a.base, b.base]), a.exponent);
-  }
-
-  static Eq? tryCombineMultiplicativeTerms(Power a, Power b) {
-    if (a.base.isSame(b.base)) {
-      return Power(a.base, a.exponent + b.exponent);
-    }
-    return null;
   }
 }

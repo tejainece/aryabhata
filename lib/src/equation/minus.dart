@@ -54,7 +54,13 @@ class Minus extends Eq {
       count++;
       expression = expression.expression;
     }
-    return count % 2 == 0 ? expression : Minus(expression);
+    if (count.isEven) return expression;
+    if (expression is Plus) {
+      return Plus(
+        expression.expressions.map((e) => Minus(e).dissolveMinus()).toList(),
+      );
+    }
+    return Minus(expression);
   }
 
   @override
@@ -105,12 +111,15 @@ class Minus extends Eq {
   }
 
   @override
+  Eq shrink({int? depth}) => Minus(expression.shrink(depth: depth));
+
+  @override
   Times multiplicativeTerms() {
     final e = dissolveConstants(depth: 1);
     if (e is Minus) {
       final inner = e.expression;
-      if (inner.toConstant()?.isEqual(1) ?? false) {
-        return Times([e]);
+      if (inner.toConstant() != null) {
+        return Times([Constant(-inner.toConstant()!)]);
       }
       return Times([-one, inner.multiplicativeTerms()]);
     }
@@ -118,7 +127,8 @@ class Minus extends Eq {
   }
 
   @override
-  Eq combineAddition() => Minus(expression.combineAddition());
+  Eq combineAdditions({int? depth}) =>
+      Minus(expression.combineAdditions(depth: depth));
 
   @override
   Eq expandMultiplications({int? depth}) =>
@@ -198,12 +208,17 @@ class Minus extends Eq {
   bool canDissolveMinus() {
     if (expression.canDissolveMinus()) return true;
     if (expression is Minus) return true;
-    return (expression is Constant &&
-        (expression as Constant).value.isNegative);
+    return expression is Plus;
   }
 
   @override
+  bool canShrink() => expression.canShrink();
+
+  @override
   bool canFactorOutAddition() => expression.canFactorOutAddition();
+
+  @override
+  bool canCombineAdditions() => expression.canCombineAdditions();
 
   @override
   bool canCombineMultiplications() => expression.canCombineMultiplications();

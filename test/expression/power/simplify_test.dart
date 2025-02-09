@@ -22,6 +22,7 @@ class _Test {
       x.pow(Constant(2)).pow(Constant(3)).pow(y),
       x.pow(Constant(2)).pow(Constant(3)).pow(y),
     ),
+    _Test((-1).pow(z), (-1).pow(z)),
   ];
 
   static List<_Test> power0 = [

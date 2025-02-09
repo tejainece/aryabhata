@@ -23,7 +23,10 @@ class Variable extends Eq {
   Eq factorOutMinus({int? depth}) => this;
 
   @override
-  Eq combineAddition() => this;
+  Eq shrink({int? depth}) => this;
+
+  @override
+  Eq combineAdditions({int? depth}) => this;
 
   @override
   double? toConstant() => null;
@@ -93,6 +96,12 @@ class Variable extends Eq {
 
   @override
   Simplification? canSimplify() => null;
+
+  @override
+  bool canShrink() => false;
+
+  @override
+  bool canCombineAdditions() => false;
 
   @override
   bool canDissolveMinus() => false;

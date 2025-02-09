@@ -34,7 +34,7 @@ void main() {
   ellipse = ellipse.substitute({'y': line});
   print(ellipse.toString());
 
-  ellipse = ellipse.simplify(dropMinus: true);
+  ellipse = ellipse.simplify(equalsZero: true);
   print(ellipse.toString());
 
   final quad = ellipse.asQuadratic(x);

@@ -16,7 +16,7 @@ void main() {
   circle = circle.substitute({'y': line});
   print(circle);
 
-  circle = circle.simplify(dropMinus: true);
+  circle = circle.simplify(equalsZero: true, debug: true);
   print(circle);
   print('-----------------------------------------------------------------');
 
@@ -24,8 +24,7 @@ void main() {
   print(quad);
   print('-----------------------------------------------------------------');
 
-
   final [sol1, sol2] = (quad.solve());
-  print(sol1.simplify(dropMinus: true));
-  // print(sol2.simplify(dropMinus: true));
+  print(sol1.simplify(equalsZero: true, debug: true));
+  print(sol2.simplify(equalsZero: true));
 }

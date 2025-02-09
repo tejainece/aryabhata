@@ -15,28 +15,28 @@ abstract class Eq {
   factory Eq.from(dynamic v) {
     if (v is Eq) return v;
     if (v is String) return Variable(v);
-    if (v is double) return Constant(v);
+    if (v is num) return Constant(v);
     throw ArgumentError('cannot create expression from ${v.runtimeType}');
   }
 
   /// Add operator. Creates a [Plus] expression.
-  Plus operator +(Eq exp) => Plus([this, exp]);
+  Plus operator +(/*Eq*/ exp) => Plus([this, Eq.from(exp)]);
 
   /// Subtract operator. Creates a [Minus] expression.
-  Plus operator -(Eq exp) => Plus([this, -exp]);
+  Plus operator -(/*Eq*/ exp) => Plus([this, -Eq.from(exp)]);
 
   /// Multiply operator. Creates a [Times] expression.
-  Times operator *(Eq exp) => Times([this, exp]);
+  Times operator *(/*Eq*/ exp) => Times([this, Eq.from(exp)]);
 
   /// Divide operator. Creates a [Divide] expression.
-  // TODO
-  Times operator /(Eq exp) => Times([this, Power(exp, Minus(Constant(1)))]);
+  Times operator /(/*Eq*/ exp) =>
+      Times([this, Power(Eq.from(exp), Minus(Constant(1)))]);
 
   /// Power operator. Creates a [Power] expression.
-  Power lpow(Eq exp) => Power.left(this, exp);
+  Power lpow(/*Eq*/ exp) => Power.left(this, Eq.from(exp));
 
   /// Power operator. Creates a [Power] expression.
-  Power pow(Eq exp) => Power.right(this, exp);
+  Power pow(/*Eq*/ exp) => Power.right(this, Eq.from(exp));
 
   /// Unary minus operator. Creates a [Minus] expression.
   Minus operator -() => Minus(this);
@@ -61,12 +61,14 @@ abstract class Eq {
 
   Eq dissolveConstants({int? depth});
 
+  Eq shrink({int? depth});
+
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
   Eq expandMultiplications({int? depth});
 
   // TODO implement depth
   /// x + (1 + y) - (2 + y) = x - y - 1
-  Eq combineAddition();
+  Eq combineAdditions({int? depth});
 
   Eq factorOutMinus({int? depth});
 
@@ -122,6 +124,10 @@ abstract class Eq {
 
   bool canDissolveMinus();
 
+  bool canShrink();
+
+  bool canCombineAdditions();
+
   bool canFactorOutAddition();
 
   bool canCombineMultiplications();
@@ -142,7 +148,7 @@ abstract class Eq {
 
   Simplification? canSimplify();
 
-  Eq simplify({bool dropMinus = false}) {
+  Eq simplify({bool equalsZero = false, bool debug = false}) {
     Eq ret = this;
     for (
       Simplification? s = ret.canSimplify();
@@ -154,8 +160,10 @@ abstract class Eq {
         ret = ret.dissolveMinus();
       } else if (s == Simplification.dissolveConstants) {
         ret = ret.dissolveConstants();
+      } else if(s == Simplification.shrink) {
+        ret = ret.shrink();
       } else if (s == Simplification.combineAdditions) {
-        ret = ret.combineAddition();
+        ret = ret.combineAdditions();
       } else if (s == Simplification.combineMultiplications) {
         ret = ret.combineMultiplications();
       } else if (s == Simplification.expandMultiplications) {
@@ -175,8 +183,11 @@ abstract class Eq {
       } else {
         throw UnimplementedError('$s');
       }
-      if (dropMinus) {
+      if (equalsZero) {
         ret = ret.dropMinus();
+      }
+      if (debug) {
+        print('On $s => $ret');
       }
     }
     return ret;
@@ -246,6 +257,7 @@ abstract class Eq {
 enum Simplification {
   dissolveMinus,
   dissolveConstants,
+  shrink,
   combineAdditions,
   combineMultiplications,
   expandMultiplications,
@@ -255,4 +267,10 @@ enum Simplification {
   expandPowers,
   dissolvePowerOfPower,
   distributeExponent,
+}
+
+extension NumExtension on num {
+  Eq pow(exp) => Eq.c(this).pow(exp);
+
+  Eq lpow(exp) => Eq.c(this).lpow(exp);
 }

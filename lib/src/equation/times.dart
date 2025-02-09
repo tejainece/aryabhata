@@ -20,7 +20,9 @@ class Times extends Eq {
     for (final e in expressions) {
       if (e is Times) {
         ret.addAll(e.expressions);
-      } else {
+      } /*else if (e.toConstant()?.isEqual(1) ?? false) {
+        continue;
+      }*/ else {
         ret.add(e);
       }
     }
@@ -73,10 +75,15 @@ class Times extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    final ret = <Eq>[];
-    num constant = 1;
-    for (var e in expressions) {
+    final list = <Eq>[];
+    for (Eq e in expressions) {
       e = e.dissolveConstants(depth: depth);
+      final terms = e.multiplicativeTerms().expressions;
+      list.addAll(terms);
+    }
+    num constant = 1;
+    final ret = <Eq>[];
+    for (var e in list) {
       final c = e.toConstant();
       if (c != null) {
         constant *= c;
@@ -144,7 +151,34 @@ class Times extends Eq {
   }
 
   @override
-  Eq combineAddition() => Times(expressions.map((e) => e.combineAddition()));
+  Eq shrink({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final expressions = this.expressions.map((e) => e.shrink(depth: depth));
+    if (expressions.length == 1) {
+      return expressions.first;
+    }
+    return Times(expressions);
+  }
+
+  @override
+  bool canShrink() {
+    for (final e in expressions) {
+      if (e.canShrink()) return true;
+    }
+    return expressions.length == 1;
+  }
+
+  @override
+  Eq combineAdditions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Times(expressions.map((e) => e.combineAdditions(depth: depth)));
+  }
 
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
   @override
@@ -377,7 +411,6 @@ class Times extends Eq {
       );
     }
     var reduced = Times(parts).combineMultiplications(depth: 1);
-    reduced = reduced.dissolveConstants(depth: 1);
     return reduced;
   }
 
@@ -441,23 +474,26 @@ class Times extends Eq {
       }
       numerators.add(e);
     }
+
     return (numerators, denominators);
   }
 
   @override
   bool canDissolveConstants() {
-    if (expressions.length == 1) return expressions.first.toConstant() != null;
     int countConstants = 0;
     for (int i = 0; i < expressions.length; i++) {
       final e = expressions[i];
       if (e.canDissolveConstants()) return true;
-      final c = e.toConstant();
-      if (c == null) continue;
-      if (i != 0) return true;
-      if (c.isEqual(1)) return true;
-      countConstants++;
+      for (final term in e.multiplicativeTerms().expressions) {
+        final c = term.toConstant();
+        if (c == null) continue;
+        if (i != 0) return true;
+        if (c.isEqual(1)) return true;
+        countConstants++;
+        if (countConstants > 1) return true;
+      }
     }
-    return countConstants > 1;
+    return false;
   }
 
   @override
@@ -480,8 +516,17 @@ class Times extends Eq {
   }
 
   @override
+  bool canCombineAdditions() {
+    for (final e in expressions) {
+      if (e.canCombineAdditions()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
   bool canCombineMultiplications() {
-    if (expressions.length == 1) return true;
     for (final e in expressions) {
       if (e.canCombineMultiplications()) return true;
     }
@@ -522,9 +567,6 @@ class Times extends Eq {
       parts.addAll(e.multiplicativeTerms().expressions);
     }
     if (Times(parts).canCombineMultiplications()) {
-      return true;
-    }
-    if (Times(parts).canDissolveConstants()) {
       return true;
     }
     return false;
@@ -589,6 +631,7 @@ class Times extends Eq {
     }
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
+    if (canShrink()) return Simplification.shrink;
     if (canCombineMultiplications()) {
       return Simplification.combineMultiplications;
     }
@@ -613,18 +656,22 @@ class Times extends Eq {
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
     final (numerators, denominators) = separateDivision();
     final sb = StringBuffer();
-    for (int i = 0; i < numerators.length; i++) {
-      final n = numerators[i];
-      if (n.isLone) {
-        sb.write(n.toString(spec: spec));
-      } else {
-        sb.write(spec.lparen);
-        sb.write(n.toString(spec: spec));
-        sb.write(spec.rparen);
+    if (numerators.isNotEmpty) {
+      for (int i = 0; i < numerators.length; i++) {
+        final n = numerators[i];
+        if (n.isLone) {
+          sb.write(n.toString(spec: spec));
+        } else {
+          sb.write(spec.lparen);
+          sb.write(n.toString(spec: spec));
+          sb.write(spec.rparen);
+        }
+        if (i < numerators.length - 1) {
+          sb.write(spec.times);
+        }
       }
-      if (i < numerators.length - 1) {
-        sb.write(spec.times);
-      }
+    } else {
+      sb.write('1');
     }
     if (denominators.isNotEmpty) {
       sb.write(spec.divide);
@@ -651,20 +698,23 @@ class Times extends Eq {
   }
 
   static Eq? tryCombineMultiplicativeTerms(Eq a, Eq b) {
-    if (a is Power && b is Power) {
-      return Power.tryCombineMultiplicativeTerms(a, b);
-    } else if (a is Power) {
-      if (a.base.isSame(b)) {
-        return Power(a.base, Plus([a.exponent, one]));
-      }
-    } else if (b is Power) {
-      if (b.base.isSame(a)) {
-        return Power(b.base, Plus([b.exponent, one]));
-      }
+    Eq aBase, aExponent, bBase, bExponent;
+    if (a is Power) {
+      aBase = a.base;
+      aExponent = a.exponent;
     } else {
-      if (a.isSame(b)) {
-        return Power(a, two);
-      }
+      aBase = a;
+      aExponent = one;
+    }
+    if (b is Power) {
+      bBase = b.base;
+      bExponent = b.exponent;
+    } else {
+      bBase = b;
+      bExponent = one;
+    }
+    if (aBase.isSame(bBase)) {
+      return Power(aBase, aExponent + bExponent);
     }
     return null;
   }

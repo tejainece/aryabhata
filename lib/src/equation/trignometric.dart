@@ -28,6 +28,9 @@ abstract class Trig extends Eq {
   Eq? tryCancelDivision(Eq other) => isSame(other) ? Constant(1.0) : null;
 
   @override
+  bool canShrink() => expression.canShrink();
+
+  @override
   bool canDissolveConstants() {
     if (expression.canDissolveConstants()) return true;
     return expression.toConstant() != null;
@@ -38,6 +41,9 @@ abstract class Trig extends Eq {
     if (expression.canDissolveMinus()) return true;
     return expression is Minus;
   }
+
+  @override
+  bool canCombineAdditions() => expression.canCombineAdditions();
 
   @override
   bool canFactorOutAddition() => expression.canFactorOutAddition();
@@ -127,6 +133,15 @@ class Cos extends Trig {
   }
 
   @override
+  Eq shrink({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Cos(expression.shrink(depth: depth));
+  }
+
+  @override
   Eq distributeMinus() {
     var inner = expression.distributeMinus();
     if (inner is Minus) {
@@ -136,7 +151,13 @@ class Cos extends Trig {
   }
 
   @override
-  Eq combineAddition() => Cos(expression.combineAddition());
+  Eq combineAdditions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Cos(expression.combineAdditions());
+  }
 
   @override
   Eq expandMultiplications({int? depth}) {
@@ -275,7 +296,13 @@ class Sin extends Trig {
   }
 
   @override
-  Eq combineAddition() => Sin(expression.combineAddition());
+  Eq combineAdditions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Sin(expression.combineAdditions());
+  }
 
   @override
   Eq factorOutMinus({int? depth}) {
@@ -310,6 +337,15 @@ class Sin extends Trig {
       return Minus(Sin(inner.expression));
     }
     return Sin(inner);
+  }
+
+  @override
+  Eq shrink({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Sin(expression.shrink(depth: depth));
   }
 
   @override
@@ -449,7 +485,13 @@ class Tan extends Trig {
   }
 
   @override
-  Eq combineAddition() => Tan(expression.combineAddition());
+  Eq combineAdditions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Tan(expression.combineAdditions());
+  }
 
   @override
   Eq factorOutMinus({int? depth}) {
@@ -484,6 +526,15 @@ class Tan extends Trig {
       return Minus(Tan(inner.expression));
     }
     return Tan(inner);
+  }
+
+  @override
+  Eq shrink({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Tan(expression.shrink(depth: depth));
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:equation/equation.dart';
 import 'package:number_factorization/number_factorization.dart';
@@ -23,9 +24,8 @@ class Plus extends Eq {
   }
 
   @override
-  Eq substitute(Map<String, Eq> substitutions) {
-    return Plus(expressions.map((e) => e.substitute(substitutions)));
-  }
+  Eq substitute(Map<String, Eq> substitutions) =>
+      Plus(expressions.map((e) => e.substitute(substitutions)));
 
   @override
   Eq dissolveConstants({int? depth}) {
@@ -101,14 +101,17 @@ class Plus extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    final list = expressions.map((e) => e.dissolveMinus(depth: depth));
-    final count = list.fold(
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.dissolveMinus(depth: depth));
+    }
+    /*final count = list.fold(
       0,
       (int count, Eq v) => count + (v is Minus ? 1 : 0),
     );
     if (count > list.length / 2) {
       return Minus(Plus(list.map((e) => e is Minus ? e.expression : Minus(e))));
-    }
+    }*/
     return Plus(list);
   }
 
@@ -116,27 +119,45 @@ class Plus extends Eq {
   Eq distributeMinus() => Plus(expressions.map((e) => e.distributeMinus()));
 
   @override
-  Eq combineAddition() {
+  Eq shrink({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final expressions = <Eq>[];
+    for (Eq e in this.expressions) {
+      e = e.shrink(depth: depth);
+      if (e is Plus) {
+        expressions.addAll(e.expressions);
+        continue;
+      }
+      if (e is Minus && e.expression is Plus) {
+        expressions.addAll(
+          (e.expression as Plus).expressions.map((e) => Minus(e)),
+        );
+        continue;
+      }
+      expressions.add(e);
+    }
+    if (expressions.length == 1) {
+      return expressions.first;
+    }
+    return Plus(expressions);
+  }
+
+  @override
+  Eq combineAdditions({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
     var ret = <Eq>[];
     for (var term in expressions) {
-      term = term.combineAddition().dissolveMinus(depth: 1);
-      if (term is Plus) {
-        ret.addAll(term.expressions);
-        continue;
-      } else if (term is Minus) {
-        final inside = term.expression;
-        if (inside is Plus) {
-          ret.addAll(
-            inside.expressions.map((e) => Minus(e).factorOutMinus()).toList(),
-          );
-          continue;
-        }
-      }
-      ret.add(term);
+      ret.add(term.combineAdditions(depth: depth));
     }
     for (int i = 0; i < ret.length; i++) {
       for (int j = i + 1; j < ret.length; j++) {
-        final s = _simplify(ret[i], ret[j]);
+        final s = tryAddTerms(ret[i], ret[j]);
         if (s != null) {
           ret[i] = s;
           ret.removeAt(j);
@@ -144,9 +165,6 @@ class Plus extends Eq {
           break;
         }
       }
-    }
-    if (ret.length == 1) {
-      return ret[0];
     }
     return Plus(ret);
   }
@@ -158,6 +176,7 @@ class Plus extends Eq {
     List<Eq> ret = parts.toList();
     final factors = <Eq>[];
     for (final possibles in parts) {
+      if(possibles.isSame(one)) continue;
       for (var possible in possibles.expressions) {
         final object = tryFactorizeBy(possible, ret);
         if (object == null) continue;
@@ -405,20 +424,13 @@ class Plus extends Eq {
 
   @override
   Simplification? canSimplify() {
+    if (canShrink()) return Simplification.shrink;
     for (final e in expressions) {
-      if (e is Minus && e.expression is Plus) {
-        return Simplification.combineAdditions;
-      }
       final s = e.canSimplify();
       if (s != null) return s;
     }
-    for (int i = 0; i < expressions.length; i++) {
-      for (int j = i + 1; j < expressions.length; j++) {
-        if (canAddTerms(expressions[i], expressions[j])) {
-          return Simplification.combineAdditions;
-        }
-      }
-    }
+    if (canDissolveConstants()) return Simplification.dissolveConstants;
+    if (canCombineAdditions()) return Simplification.combineAdditions;
     return null;
   }
 
@@ -469,18 +481,42 @@ class Plus extends Eq {
 
   @override
   bool canDissolveMinus() {
-    int countMinus = 0;
+    /*int countMinus = 0;
     for (final e in expressions) {
       if (e.canDissolveMinus()) return true;
       if (e is Minus) countMinus++;
     }
-    return countMinus > expressions.length / 2;
+    return countMinus > expressions.length / 2;*/
+    return expressions.any((e) => e.canDissolveMinus());
+  }
+
+  @override
+  bool canShrink() {
+    for (final e in expressions) {
+      if (e.canShrink()) return true;
+      if (e is Plus) return true;
+      if (e is Minus && e.expression is Plus) return true;
+    }
+    return expressions.length == 1;
   }
 
   @override
   bool canFactorOutAddition() {
     throw UnimplementedError();
     // TODO
+    return false;
+  }
+
+  @override
+  bool canCombineAdditions() {
+    for (final e in expressions) {
+      if (e.canCombineAdditions()) return true;
+    }
+    for (int i = 0; i < expressions.length; i++) {
+      for (int j = i + 1; j < expressions.length; j++) {
+        if (canAddTerms(expressions[i], expressions[j])) return true;
+      }
+    }
     return false;
   }
 
@@ -536,21 +572,16 @@ class Plus extends Eq {
       }
       if (!(e.toConstant()?.isEqual(1) ?? false) || !hasC) {
         if (hasC) sb.write(spec.times);
-        sb.write(e.toString(spec: spec));
+        if (e.isLone) {
+          sb.write(e.toString(spec: spec));
+        } else {
+          sb.write(spec.lparen);
+          sb.write(e.toString(spec: spec));
+          sb.write(spec.rparen);
+        }
       }
     }
     return sb.toString();
-  }
-
-  static Eq? _simplify(Eq f, Eq s) {
-    if (f is Constant && s is Constant) {
-      return Constant(f.value + s.value);
-    }
-    final u = tryAddTerms(f, s);
-    if (u != null) {
-      return u;
-    }
-    return null;
   }
 
   static bool canAddTerms(Eq a, Eq b) {
@@ -560,9 +591,6 @@ class Plus extends Eq {
   }
 
   static Eq? tryAddTerms(Eq a, Eq b) {
-    // a = a.simplify();
-    // b = b.simplify();
-
     var (aC, aSimplified) = a.separateConstant();
     var (bC, bSimplified) = b.separateConstant();
     if (!aSimplified.isSame(bSimplified)) return null;

@@ -31,6 +31,9 @@ class Imaginary extends Eq {
   Eq distributeMinus() => this;
 
   @override
+  Eq shrink({int? depth}) => this;
+
+  @override
   Eq combineMultiplications({int? depth}) => this;
 
   @override
@@ -46,7 +49,7 @@ class Imaginary extends Eq {
   Eq factorOutAddition() => this;
 
   @override
-  Eq combineAddition() => this;
+  Eq combineAdditions({int? depth}) => this;
 
   @override
   Eq distributeExponent({int? depth}) => this;
@@ -82,7 +85,13 @@ class Imaginary extends Eq {
   bool canDissolveMinus() => false;
 
   @override
+  bool canShrink() => false;
+
+  @override
   bool canFactorOutAddition() => false;
+
+  @override
+  bool canCombineAdditions() => false;
 
   @override
   bool canCombineMultiplications() => false;
