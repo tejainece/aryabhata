@@ -11,14 +11,14 @@ class Quadratic {
     throw UnimplementedError();
   }
 
+  Eq get discriminant => (b.pow(two) - Eq.c(4) * a * c); // .simplify();
+
   List<Eq> solve() {
     final ret = <Eq>[];
-    ret.add(
-      ((b.pow(two) - Eq.c(4) * a * c).pow(Constant(0.5)) - b) / (Eq.c(2) * a),
-    );
-    ret.add(
-      ((b.pow(two) - Eq.c(4) * a * c).pow(Constant(0.5)) + b) / (Eq.c(2) * a),
-    );
+    ret.addAll([
+      ((-b + discriminant.pow(0.5)) / (Eq.c(2) * a)).simplify(),
+      ((-b - discriminant.pow(0.5)) / (Eq.c(2) * a)).simplify(),
+    ]);
     return ret;
   }
 

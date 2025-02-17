@@ -10,13 +10,23 @@ abstract class Trig extends Eq {
   Eq get expression;
 
   @override
-  (double, Eq) separateConstant() => (1, this);
+  (num, Eq) separateConstant() {
+    final c = toConstant();
+    if (c != null) return (c, Constant(1.0));
+    return (1, this);
+  }
 
   @override
   Eq dropMinus() => this;
 
   @override
   Times multiplicativeTerms() => Times([this]);
+
+  @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() => (
+    [this],
+    [],
+  );
 
   @override
   bool get isLone => true;

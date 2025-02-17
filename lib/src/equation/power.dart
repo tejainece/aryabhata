@@ -19,7 +19,55 @@ class Power extends Eq {
   factory Power.left(Eq base, Eq exponent) => Power(base, exponent);
 
   @override
-  (num, Eq) separateConstant() => (1, this);
+  (num, Eq) separateConstant() {
+    {
+      final c = toConstant();
+      if (c != null) {
+        return (c, Constant(1));
+      }
+    }
+    final e = exponent.toConstant();
+    if (e == null) return (1, this);
+    if (base is! Times) return (1, this);
+    final parts = base.multiplicativeTerms().expressions;
+    num c = 1;
+    final ret = <Eq>[];
+    for (final part in parts) {
+      final (cc, eq) = part.separateConstant();
+      c *= cc;
+      ret.add(eq);
+    }
+    if (ret.isEmpty) {
+      return (c, Constant(1));
+    }
+    return (Constant(c).pow(Constant(e)).toConstant()!, Times(ret).pow(e));
+    /*final terms = multiplicativeTerms();
+    if (terms.expressions.length == 1 && terms.expressions.first is Power) {
+      final c = terms.expressions.first.toConstant();
+      if (c != null) {
+        return (c, Constant(1));
+      }
+      return (1, terms.expressions.first);
+    }
+    num c = 1;
+    List<Eq> eqs = [];
+    for (final term in terms.expressions) {
+      final cc = term.toConstant();
+      if (cc != null) {
+        c *= cc;
+        continue;
+      }
+      final (ccc, m) = term.separateConstant();
+      c *= ccc;
+      if (!m.isSame(one)) {
+        eqs.add(m);
+      }
+    }
+    if (eqs.isEmpty) {
+      return (c, Constant(1));
+    }
+    return (c, Times(eqs));*/
+  }
 
   @override
   num? toConstant() {
@@ -252,15 +300,39 @@ class Power extends Eq {
       Power(base.factorOutAddition(), exponent.factorOutAddition());
 
   @override
-  Times multiplicativeTerms() => Times(
-    base.multiplicativeTerms().expressions.map((e) => Power(e, exponent)),
-  );
+  Times multiplicativeTerms() {
+    return Times(
+      base.multiplicativeTerms().expressions.map((e) => Power(e, exponent)),
+    );
+  }
+
+  @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() {
+    final terms = multiplicativeTerms().expressions;
+    final numerators = <Eq>[];
+    final denominators = <Eq>[];
+    for (final term in terms) {
+      if (term is! Power) {
+        numerators.add(term);
+        continue;
+      }
+      final denom = term.toDenominator;
+      if (denom == null) {
+        numerators.add(term);
+        continue;
+      }
+      denominators.add(denom);
+    }
+    return (numerators, denominators);
+  }
 
   @override
   Eq? tryCancelDivision(Eq other) {
     other = other.simplify();
-    if (simplify().isSame(other)) return one;
-    final list = multiplicativeTerms().expressions.toList();
+    Eq simplified = simplify();
+    if (simplified.isSame(other)) return one;
+    if (simplified is! Power) return simplified.tryCancelDivision(other);
+    final list = simplified.multiplicativeTerms().expressions.toList();
     if (list.length > 1) {
       for (int i = 0; i < list.length; i++) {
         final v = list[i];
@@ -276,7 +348,7 @@ class Power extends Eq {
         ).combineMultiplications(depth: 1).combinePowers(depth: 1);
       }
     }
-    return _tryCancelDivision(other);
+    return simplified._tryCancelDivision(other);
   }
 
   Eq? _tryCancelDivision(Eq other) {
@@ -303,6 +375,11 @@ class Power extends Eq {
   }
 
   Eq? get toDenominator {
+    if (base is Power) {
+      final tmp = dissolvePowerOfPower();
+      if (tmp is! Power) return null;
+      return tmp.toDenominator;
+    }
     final eq = exponent.dissolveMinus();
     if (eq is! Minus) {
       return null;

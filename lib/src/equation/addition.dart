@@ -16,6 +16,8 @@ class Plus extends Eq {
     for (final e in expressions) {
       if (e is Plus) {
         ret.addAll(e.expressions);
+      } else if (e is Times && e.expressions.length == 1) {
+        ret.add(e.expressions.first);
       } else {
         ret.add(e);
       }
@@ -35,7 +37,8 @@ class Plus extends Eq {
     }
     final ret = <Eq>[];
     num constant = 0;
-    for (var e in expressions) {
+    for (int i = 0; i < expressions.length; i++) {
+      Eq e = expressions[i];
       e = e.dissolveConstants(depth: depth);
       final c = e.toConstant();
       if (c != null) {
@@ -157,37 +160,176 @@ class Plus extends Eq {
     }
     for (int i = 0; i < ret.length; i++) {
       for (int j = i + 1; j < ret.length; j++) {
-        final s = tryAddTerms(ret[i], ret[j]);
+        final a = ret[i];
+        final b = ret[j];
+        final s = tryAddTerms(a, b);
         if (s != null) {
           ret[i] = s;
           ret.removeAt(j);
           j--;
-          break;
+          continue;
         }
       }
     }
     return Plus(ret);
   }
 
-  @override
-  Times multiplicativeTerms() {
+  (List<Times>, List<Times>) separateIndividualDivision() {
     List<Times> parts =
         expressions.map((e) => e.multiplicativeTerms()).toList();
-    List<Eq> ret = parts.toList();
-    final factors = <Eq>[];
-    for (final possibles in parts) {
-      if(possibles.isSame(one)) continue;
-      for (var possible in possibles.expressions) {
-        final object = tryFactorizeBy(possible, ret);
-        if (object == null) continue;
-        factors.add(possible);
-        ret = object;
+    List<Times> numerators = [];
+    List<Times> denominators = [];
+    for (final part in parts) {
+      final (numerator, denominator) = part.separateDivision();
+      if (numerator.isNotEmpty) {
+        numerators.add(Times(numerator));
+      } else {
+        numerators.add(Times([one]));
+      }
+      if (denominator.isNotEmpty) {
+        denominators.add(Times(denominator));
+      } else {
+        denominators.add(Times([one]));
       }
     }
+    return (numerators, denominators);
+  }
+
+  @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() {
+    final terms = multiplicativeTerms().expressions;
+    final numerators = <Eq>[];
+    final denominators = <Eq>[];
+    for (final term in terms) {
+      if (term is! Power) {
+        numerators.add(term);
+        continue;
+      }
+      final denom = term.toDenominator;
+      if (denom == null) {
+        numerators.add(term);
+        continue;
+      }
+      denominators.add(denom);
+    }
+    return (numerators, denominators);
+  }
+
+  /*@override
+  Times multiplicativeTerms() {
+    final (numerators, denominators) = _separateDivision();
+    final factors = <Eq>[];
+    List<Eq> ret = [];
+    for (int i = 0; i < numerators.length; i++) {
+      final list = <Eq>[...numerators[i].expressions];
+      list.addAll(denominators[i].expressions.map((e) => e.pow(-1)));
+      ret.add(Times(list));
+    }
+    List<Eq> possibleFactors = numerators.fold(
+      <Eq>[],
+          (ret, eq) => ret..addAll(eq.expressions),
+    );
+    for (final factor in possibleFactors) {
+      List<Eq>? object = tryFactorizeBy(factor, ret);
+      if (object != null) {
+        factors.add(factor);
+        ret = object;
+        continue;
+      }
+    }
+    possibleFactors = denominators.fold(
+      <Eq>[],
+      (ret, eq) => ret..addAll(eq.expressions),
+    );
+    for (Eq factor in possibleFactors) {
+      factor = factor.lpow(-1);
+      List<Eq>? object = tryFactorizeBy(factor, ret);
+      if (object != null) {
+        factors.add(factor);
+        ret = object;
+        continue;
+      }
+    }
+    // TODO
     if (factors.isEmpty) {
       return Times([this]);
     }
     return Times([...factors, Plus(ret)]);
+  }*/
+
+  @override
+  Times multiplicativeTerms() {
+    List<Times> parts = [];
+    for (final e in expressions) {
+      parts.add(e.multiplicativeTerms());
+    }
+    List<Eq> ret = parts.toList();
+    final factors = <Eq>[];
+    for (final possibles in parts) {
+      for (var possible in possibles.expressions) {
+        List<Eq>? object = tryFactorizeBy(possible, ret);
+        if (object != null) {
+          factors.add(possible);
+          ret = object;
+          continue;
+        }
+      }
+    }
+    final (numerator, denominators) = commonDenominators(ret);
+    factors.addAll(denominators.map((e) => e.lpow(-1)));
+    if (factors.isEmpty) {
+      return Times([numerator]);
+    }
+    return Times([...factors, numerator]);
+  }
+
+  static (Eq numerator, List<Eq> denominators) commonDenominators(
+    List<Eq> terms,
+  ) {
+    var (numerators, denominators) = terms[0].separateDivision();
+    Eq numerator = Times(numerators);
+    for (int i = 1; i < terms.length; i++) {
+      final term2 = terms[i];
+      (numerator, denominators) = commonDenominators2Terms(
+        numerator,
+        denominators,
+        term2,
+      );
+    }
+    return (numerator, denominators);
+  }
+
+  static (Eq numerator, List<Eq> denominators) commonDenominators2Terms(
+    Eq numerator,
+    List<Eq> term1Denominators,
+    Eq term2,
+  ) {
+    final (term2Numerators, term2Denominators) = term2.separateDivision();
+    final factors = <Eq>[];
+    final List<Eq> possible = [...term1Denominators, ...term2Denominators];
+    List<Eq> denominatorsTerms = <Eq>[
+      Times(term1Denominators),
+      Times(term2Denominators),
+    ];
+    for (final factor in possible) {
+      final div = tryFactorizeBy(factor, denominatorsTerms);
+      if (div == null) continue;
+      factors.add(factor);
+      denominatorsTerms = div;
+    }
+    numerator = Times([
+      Plus([
+        numerator * denominatorsTerms[1] +
+            Times(term2Numerators) * denominatorsTerms[0],
+      ]),
+    ]);
+    return (
+      numerator,
+      Times([
+        ...factors,
+        ...denominatorsTerms,
+      ]).multiplicativeTerms().expressions.toList(),
+    );
   }
 
   @override
@@ -222,17 +364,6 @@ class Plus extends Eq {
       return this;
     }
     return Times([...factors, Plus(ret)]);
-  }
-
-  static List<Eq>? tryFactorizeBy(Eq factor, List<Eq> eq) {
-    // assert(factor.isSingle);
-    final ret = <Eq>[];
-    for (int i = 0; i < eq.length; i++) {
-      final d = eq[i].tryCancelDivision(factor);
-      if (d == null) return null;
-      ret.add(d);
-    }
-    return ret;
   }
 
   Plus expandingMultiply(Eq s) {
@@ -514,7 +645,9 @@ class Plus extends Eq {
     }
     for (int i = 0; i < expressions.length; i++) {
       for (int j = i + 1; j < expressions.length; j++) {
-        if (canAddTerms(expressions[i], expressions[j])) return true;
+        Eq a = expressions[i];
+        Eq b = expressions[j];
+        if (canAddTerms(a, b)) return true;
       }
     }
     return false;
@@ -556,6 +689,32 @@ class Plus extends Eq {
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
     final sb = StringBuffer();
+    for (int i = 0; i < expressions.length; i++) {
+      Eq expression = expressions[i];
+      if (expression is Minus) {
+        sb.write(spec.minus);
+        expression = expression.expression;
+      } else {
+        if (i > 0) {
+          sb.write(spec.plus);
+        }
+      }
+      bool needsParen = expression is Minus || expression is Plus;
+      if (needsParen) {
+        sb.write(spec.lparen);
+      }
+      sb.write(expression.toString(spec: spec));
+      if (needsParen) {
+        sb.write(spec.rparen);
+      }
+    }
+    return sb.toString();
+  }
+
+  /*
+  @override
+  String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
+    final sb = StringBuffer();
     sb.write(expressions.first.toString(spec: spec));
     for (int i = 1; i < expressions.length; i++) {
       var (c, e) = expressions[i].separateConstant();
@@ -572,7 +731,7 @@ class Plus extends Eq {
       }
       if (!(e.toConstant()?.isEqual(1) ?? false) || !hasC) {
         if (hasC) sb.write(spec.times);
-        if (e.isLone) {
+        if (e.isLone || e is Times) {
           sb.write(e.toString(spec: spec));
         } else {
           sb.write(spec.lparen);
@@ -582,6 +741,28 @@ class Plus extends Eq {
       }
     }
     return sb.toString();
+  }*/
+
+  static List<Eq>? tryFactorizeBy(Eq factor, List<Eq> terms) {
+    // assert(factor.isSingle);
+    if (factor.isSame(one)) return null;
+    final ret = <Eq>[];
+    for (int i = 0; i < terms.length; i++) {
+      final term = terms[i];
+      final d = term.tryCancelDivision(factor);
+      if (d == null) return null;
+      ret.add(d);
+    }
+    return ret;
+  }
+
+  static List<Eq>? combineFractions(List<Eq> terms, Eq factor) {
+    if (factor is! Power) return null;
+    final denom = (factor).toDenominator;
+    if (denom == null) return null;
+    return terms
+        .map((e) => Times([denom, e]).combineMultiplications())
+        .toList();
   }
 
   static bool canAddTerms(Eq a, Eq b) {

@@ -10,6 +10,11 @@ class Minus extends Eq {
     final v = expression.simplify();
     if (v is! Constant) return null;
     return -v.value;
+    /*
+        final ec = expression.toConstant();
+    if (ec == null) return null;
+    return -ec;
+     */
   }
 
   @override
@@ -127,6 +132,13 @@ class Minus extends Eq {
   }
 
   @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() {
+    final (numerators, denominators) = expression.separateDivision();
+    numerators.add(Eq.c(-1));
+    return (numerators, denominators);
+  }
+
+  @override
   Eq combineAdditions({int? depth}) =>
       Minus(expression.combineAdditions(depth: depth));
 
@@ -184,7 +196,7 @@ class Minus extends Eq {
   bool get isSingle => false;
 
   @override
-  bool get isLone => expression.isLone;
+  bool get isLone => true; //expression.isLone;
 
   @override
   Eq substitute(Map<String, Eq> substitutions) =>

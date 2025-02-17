@@ -24,6 +24,12 @@ class Constant extends Eq {
   }
 
   @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() => (
+    [this],
+    [],
+  );
+
+  @override
   Eq factorOutMinus({int? depth}) => this;
 
   @override
@@ -188,9 +194,9 @@ extension NumExt on num {
   int? get tryToInt => isInt ? round() : null;
 
   String get stringMaybeInt {
-    if(isInt) {
+    if (isInt) {
       return round().toString();
-    } else if(isInfinite) {
+    } else if (isInfinite) {
       return '∞';
     }
     return toString();

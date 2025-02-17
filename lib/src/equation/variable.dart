@@ -59,6 +59,12 @@ class Variable extends Eq {
   Times multiplicativeTerms() => Times([this]);
 
   @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() => (
+    [this],
+    [],
+  );
+
+  @override
   Eq dissolveMinus({int? depth}) => this;
 
   @override

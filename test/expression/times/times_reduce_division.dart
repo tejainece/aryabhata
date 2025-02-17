@@ -16,7 +16,7 @@ class _Test {
     _Test(
       Eq.c(2) / (Eq.c(2) + Eq.c(4) * x),
       Eq.c(1) / (Eq.c(1) + x * 2),
-      '1/(1+2⋅x)',
+      '(1+2⋅x)^-1',
     ),
     _Test(
       Eq.c(6) / (Eq.c(2) + Eq.c(4) * x),

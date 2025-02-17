@@ -46,6 +46,12 @@ class Imaginary extends Eq {
   Times multiplicativeTerms() => Times([this]);
 
   @override
+  (List<Eq> numerators, List<Eq> denominators) separateDivision() => (
+    [this],
+    [],
+  );
+
+  @override
   Eq factorOutAddition() => this;
 
   @override

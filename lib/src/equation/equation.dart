@@ -105,6 +105,8 @@ abstract class Eq {
 
   Eq reduceDivisions({int? depth});
 
+  (List<Eq>, List<Eq>) separateDivision();
+
   Eq? tryCancelDivision(Eq other);
 
   bool get isLone;
@@ -160,7 +162,7 @@ abstract class Eq {
         ret = ret.dissolveMinus();
       } else if (s == Simplification.dissolveConstants) {
         ret = ret.dissolveConstants();
-      } else if(s == Simplification.shrink) {
+      } else if (s == Simplification.shrink) {
         ret = ret.shrink();
       } else if (s == Simplification.combineAdditions) {
         ret = ret.combineAdditions();
@@ -261,7 +263,7 @@ enum Simplification {
   combineAdditions,
   combineMultiplications,
   expandMultiplications,
-  expandDivision,
+  // expandDivision,
   reduceDivisions,
   // combinePowers,
   expandPowers,

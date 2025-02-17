@@ -22,6 +22,21 @@ class _Case {
       (a + b) * a * (one + b * x),
       '[a+b, a, 1+b⋅x]',
     ),
+    _Case(
+      Eq.c(1) / b.pow(2) + 1,
+      b.pow(-2) * (Eq.c(1) + b.pow(2)),
+      '[(b^2)^-1, 1+b^2]',
+    ),
+    _Case(
+      a.pow(2) / b.pow(2) + 1,
+      b.pow(-2) * (a.pow(2) + b.pow(2)),
+      '[(b^2)^-1, a^2+b^2]',
+    ),
+    _Case(
+      a.pow(2) / b.pow(2) + a / b + a,
+      b.pow(-2) * a * (a + b + b.pow(2)),
+      '[a, b^-1, (b^(2-1))^-1, a^(2-1)+b^(2-1)+b⋅b^(2-1)]',
+    ),
   ];
 }
 

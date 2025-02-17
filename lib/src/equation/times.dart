@@ -3,11 +3,6 @@ import 'dart:math';
 
 import 'package:equation/equation.dart';
 
-/*
-TODO:
-Handle (x/y)/z and x/(y/z) properly. Associativity
- */
-
 class Times extends Eq {
   final UnmodifiableListView<Eq> expressions;
 
@@ -19,10 +14,13 @@ class Times extends Eq {
     final ret = <Eq>[];
     for (final e in expressions) {
       if (e is Times) {
-        ret.addAll(e.expressions);
-      } /*else if (e.toConstant()?.isEqual(1) ?? false) {
+        for (final t in e.expressions) {
+          if (t.toConstant()?.isEqual(1) ?? false) continue;
+          ret.add(t);
+        }
+      } else if (e.toConstant()?.isEqual(1) ?? false) {
         continue;
-      }*/ else {
+      } else {
         ret.add(e);
       }
     }
@@ -90,6 +88,9 @@ class Times extends Eq {
         continue;
       }
       ret.add(e);
+    }
+    if (constant.isNaN || constant.isInfinite || constant.isEqual(0)) {
+      return Constant(constant);
     }
     // TODO try to keep constants integers
     if (ret.isEmpty) {
@@ -291,7 +292,9 @@ class Times extends Eq {
 
     for (int i = 0; i < ret.length; i++) {
       for (int j = i + 1; j < ret.length; j++) {
-        final tmp = tryCombineMultiplicativeTerms(ret[i], ret[j]);
+        Eq a = ret[i];
+        Eq b = ret[j];
+        final tmp = tryCombineMultiplicativeTerms(a, b);
         if (tmp == null) continue;
         ret[i] = tmp;
         ret.removeAt(j);
@@ -404,13 +407,15 @@ class Times extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
+    if(!canReduceDivisions()) return this;
     final parts = <Eq>[];
     for (var e in expressions) {
       parts.addAll(
         e.reduceDivisions(depth: depth).multiplicativeTerms().expressions,
       );
     }
-    var reduced = Times(parts).combineMultiplications(depth: 1);
+    var reduced =
+        Times(parts).combineMultiplications(depth: 1).dissolveConstants();
     return reduced;
   }
 
@@ -422,8 +427,8 @@ class Times extends Eq {
     if (expressions.length == 1) {
       return expressions[0].isLone;
     }
-    // return expressions.every((e) => e.isLone);
-    return false;
+    return expressions.every((e) => e.isLone);
+    // return false;
   }
 
   @override
@@ -566,9 +571,12 @@ class Times extends Eq {
       if (e.canReduceDivisions()) return true;
       parts.addAll(e.multiplicativeTerms().expressions);
     }
-    if (Times(parts).canCombineMultiplications()) {
+    /*if (Times(parts).canCombineMultiplications()) {
       return true;
     }
+    if (Times(parts).canDissolveConstants()) {
+      return true;
+    }*/
     return false;
   }
 
@@ -625,13 +633,13 @@ class Times extends Eq {
 
   @override
   Simplification? canSimplify() {
+    if (canShrink()) return Simplification.shrink;
     for (final e in expressions) {
       final s = e.canSimplify();
       if (s != null) return s;
     }
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
-    if (canShrink()) return Simplification.shrink;
     if (canCombineMultiplications()) {
       return Simplification.combineMultiplications;
     }
