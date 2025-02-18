@@ -19,6 +19,37 @@ abstract class Eq {
     throw ArgumentError('cannot create expression from ${v.runtimeType}');
   }
 
+  factory Eq.fromJson(dynamic json) {
+    if(json is String) {
+      return Variable(json);
+    } else if(json is num) {
+      return Constant(json);
+    } else if(json is bool) {
+      return Constant(json ? 1 : 0);
+    } else if(json is! Map) {
+      throw ArgumentError('cannot create expression from ${json.runtimeType}');
+    }
+    final String type = json['type'];
+    if(type == EqJsonType.imaginary.name) {
+      return i;
+    } else if(type == EqJsonType.minus.name) {
+      return Minus.fromJson(json);
+    } else if(type == EqJsonType.sin.name) {
+      return Sin.fromJson(json);
+    } else if(type == EqJsonType.cos.name) {
+      return Cos.fromJson(json);
+    } else if(type == EqJsonType.tan.name) {
+      return Tan.fromJson(json);
+    } else if(type == EqJsonType.plus.name) {
+      return Plus.fromJson(json);
+    } else if(type == EqJsonType.times.name) {
+      return Times.fromJson(json);
+    } else if(type == EqJsonType.power.name) {
+      return Power.fromJson(json);
+    }
+    throw UnsupportedError(type);
+  }
+
   /// Add operator. Creates a [Plus] expression.
   Plus operator +(/*Eq*/ exp) => Plus([this, Eq.from(exp)]);
 
@@ -157,6 +188,9 @@ abstract class Eq {
       s != null;
       s = ret.canSimplify()
     ) {
+      if (debug) {
+        print('Before $s => ');
+      }
       // print('$s: $ret');
       if (s == Simplification.dissolveMinus) {
         ret = ret.dissolveMinus();
@@ -189,17 +223,18 @@ abstract class Eq {
         ret = ret.dropMinus();
       }
       if (debug) {
-        print('On $s => $ret');
+        print('$ret');
       }
     }
     return ret;
   }
 
+  dynamic toJson();
+
   Quadratic asQuadratic(Variable x) {
-    // TODO handle other types
     var simplified = simplify();
     if (simplified is! Plus) {
-      throw UnimplementedError();
+      simplified = Plus([simplified]);
     }
     final a = <Eq>[];
     final b = <Eq>[];
@@ -227,30 +262,6 @@ abstract class Eq {
     return Quadratic(Plus(a), Plus(b), Plus(c));
   }
 
-  /*
-  // TODO handle negatives properly
-  static Eq addTerms(Eq a, Eq b) {
-    a = a.simplify();
-    b = b.simplify();
-
-    var (aC, aSimplified) = a.separateConstant();
-    var (bC, bSimplified) = b.separateConstant();
-
-    if (!aSimplified.isSame(bSimplified)) {
-      return Plus([aSimplified, bSimplified]);
-    }
-    if (aSimplified is Constant) {
-      return Constant((aC + bC) * aSimplified.value).simplify();
-    } else if (aSimplified is Minus) {
-      final v = aSimplified.expression;
-      if (v is Constant) {
-        return Minus(Constant((aC + bC) * v.value)).simplify();
-      }
-    }
-    return Times([Constant(aC + bC), aSimplified]);
-  }
-   */
-
   static Constant c(num value) => Constant(value);
 
   static Variable v(String name) => Variable(name);
@@ -271,8 +282,22 @@ enum Simplification {
   distributeExponent,
 }
 
+enum EqJsonType {
+  constant,
+  imaginary,
+  variable,
+  minus,
+  plus,
+  times,
+  power,
+  cos,
+  sin,
+  tan,
+}
+
 extension NumExtension on num {
   Eq pow(exp) => Eq.c(this).pow(exp);
 
   Eq lpow(exp) => Eq.c(this).lpow(exp);
 }
+

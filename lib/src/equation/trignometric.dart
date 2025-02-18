@@ -95,6 +95,11 @@ class Cos extends Trig {
 
   Cos(this.expression);
 
+  factory Cos.fromJson(Map map) {
+    assert(map['type'] == EqJsonType.cos.name);
+    return Cos(Eq.fromJson(map['expression']));
+  }
+
   @override
   double? toConstant() {
     final c = expression.simplify().toConstant();
@@ -276,6 +281,19 @@ class Cos extends Trig {
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) =>
       'cos(${expression.toString(spec: spec)})';
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.cos.name,
+    'expression': expression.toJson(),
+  };
+
+  @override
+  int get hashCode => expression.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Cos && expression == other.expression;
 }
 
 class Sin extends Trig {
@@ -283,6 +301,11 @@ class Sin extends Trig {
   final Eq expression;
 
   Sin(this.expression);
+
+  factory Sin.fromJson(Map map) {
+    assert(map['type'] == EqJsonType.sin.name);
+    return Sin(Eq.fromJson(map['expression']));
+  }
 
   @override
   double? toConstant() {
@@ -465,6 +488,19 @@ class Sin extends Trig {
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) =>
       'sin(${expression.toString(spec: spec)})';
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.sin.name,
+    'expression': expression.toJson(),
+  };
+
+  @override
+  int get hashCode => expression.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Sin && expression == other.expression;
 }
 
 class Tan extends Trig {
@@ -472,6 +508,11 @@ class Tan extends Trig {
   final Eq expression;
 
   Tan(this.expression);
+
+  factory Tan.fromJson(Map map) {
+    assert(map['type'] == EqJsonType.sin.name);
+    return Tan(Eq.fromJson(map['expression']));
+  }
 
   @override
   double? toConstant() {
@@ -655,4 +696,17 @@ class Tan extends Trig {
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) =>
       'tan(${expression.toString(spec: spec)})';
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.tan.name,
+    'expression': expression.toJson(),
+  };
+
+  @override
+  int get hashCode => expression.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Tan && expression == other.expression;
 }

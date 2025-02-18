@@ -125,6 +125,15 @@ class Imaginary extends Eq {
 
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) => 'i';
+
+  @override
+  Map<String, dynamic> toJson() => {'type': EqJsonType.imaginary.name};
+
+  @override
+  int get hashCode => i.hashCode;
+
+  @override
+  bool operator ==(Object other) => other is Imaginary;
 }
 
 const i = Imaginary._();

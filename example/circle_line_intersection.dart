@@ -55,7 +55,7 @@ void main() {
     '-----------------------------SOLUTIONS------------------------------------',
   );
   var [sol1, sol2] = quad.solve();
-  sol1 = sol1.simplify();
+  sol1 = sol1.simplify(debug: true);
   print(sol1);
   sol2 = sol2.simplify();
   print(sol2);

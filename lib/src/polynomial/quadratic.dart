@@ -11,7 +11,7 @@ class Quadratic {
     throw UnimplementedError();
   }
 
-  Eq get discriminant => (b.pow(two) - Eq.c(4) * a * c); // .simplify();
+  Eq get discriminant => (b.pow(two) - Eq.c(4) * a * c).simplify();
 
   List<Eq> solve() {
     final ret = <Eq>[];

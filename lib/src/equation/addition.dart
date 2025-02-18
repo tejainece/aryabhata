@@ -1,6 +1,6 @@
-import 'dart:collection';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:equation/equation.dart';
 import 'package:number_factorization/number_factorization.dart';
 
@@ -23,6 +23,12 @@ class Plus extends Eq {
       }
     }
     return Plus._(ret);
+  }
+
+  factory Plus.fromJson(Map map) {
+    assert(map['type'] == EqJsonType.plus.name);
+    final List expressions = map['expressions'];
+    return Plus(expressions.map((e) => Eq.from(e)).toList());
   }
 
   @override
@@ -260,19 +266,24 @@ class Plus extends Eq {
   @override
   Times multiplicativeTerms() {
     List<Times> parts = [];
-    for (final e in expressions) {
-      parts.add(e.multiplicativeTerms());
+    List<Eq> possibles;
+    {
+      Set<Eq> possiblesSet = {};
+      for (final e in expressions) {
+        final t = e.multiplicativeTerms();
+        parts.add(t);
+        possiblesSet.addAll(t.expressions);
+      }
+      possibles = possiblesSet.toList();
     }
     List<Eq> ret = parts.toList();
     final factors = <Eq>[];
-    for (final possibles in parts) {
-      for (var possible in possibles.expressions) {
-        List<Eq>? object = tryFactorizeBy(possible, ret);
-        if (object != null) {
-          factors.add(possible);
-          ret = object;
-          continue;
-        }
+    for (var possible in possibles) {
+      List<Eq>? object = tryFactorizeBy(possible, ret);
+      if (object != null) {
+        factors.add(possible);
+        ret = object;
+        continue;
       }
     }
     final (numerator, denominators) = commonDenominators(ret);
@@ -743,9 +754,23 @@ class Plus extends Eq {
     return sb.toString();
   }*/
 
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.plus.name,
+    'expressions': expressions.map((e) => e.toJson()).toList(),
+  };
+
+  @override
+  int get hashCode => Object.hashAll(expressions);
+
+  @override
+  bool operator ==(Object other) =>
+      other is Plus &&
+      DeepCollectionEquality.unordered().equals(expressions, other.expressions);
+
   static List<Eq>? tryFactorizeBy(Eq factor, List<Eq> terms) {
     // assert(factor.isSingle);
-    if (factor.isSame(one)) return null;
+    if (factor == one) return null;
     final ret = <Eq>[];
     for (int i = 0; i < terms.length; i++) {
       final term = terms[i];

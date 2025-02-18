@@ -1,6 +1,6 @@
-import 'dart:collection';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:equation/equation.dart';
 
 class Times extends Eq {
@@ -28,6 +28,12 @@ class Times extends Eq {
       ret.add(one);
     }
     return Times._(ret);
+  }
+
+  factory Times.fromJson(Map map) {
+    assert(map['type'] == EqJsonType.times.name);
+    final List expressions = map['expressions'];
+    return Times(expressions.map((e) => Eq.from(e)).toList());
   }
 
   @override
@@ -385,6 +391,25 @@ class Times extends Eq {
 
   @override
   Eq? tryCancelDivision(Eq other) {
+    final ret = <Eq>[];
+    bool found = false;
+    for (final e in expressions) {
+      if (found) {
+        ret.add(e);
+        continue;
+      }
+      final div = e.tryCancelDivision(other);
+      if (div == null) {
+        ret.add(e);
+        continue;
+      }
+      ret.add(div);
+      found = true;
+    }
+    if(!found) return null;
+    if(ret.length == 1) return ret.first;
+    return Times(ret);
+    /*
     final ret = multiplicativeTerms().expressions.toList();
     for (int i = 0; i < ret.length; i++) {
       final v = ret[i];
@@ -399,6 +424,7 @@ class Times extends Eq {
       return Times(ret);
     }
     return null;
+     */
   }
 
   @override
@@ -407,7 +433,7 @@ class Times extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-    if(!canReduceDivisions()) return this;
+    if (!canReduceDivisions()) return this;
     final parts = <Eq>[];
     for (var e in expressions) {
       parts.addAll(
@@ -703,6 +729,24 @@ class Times extends Eq {
       }
     }
     return sb.toString();
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.times.name,
+    'expressions': expressions.map((e) => e.toJson()).toList(),
+  };
+
+  @override
+  int get hashCode => Object.hashAllUnordered(expressions);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! Times) return false;
+    return DeepCollectionEquality.unordered().equals(
+      expressions,
+      other.expressions,
+    );
   }
 
   static Eq? tryCombineMultiplicativeTerms(Eq a, Eq b) {

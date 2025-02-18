@@ -18,6 +18,9 @@ class Power extends Eq {
 
   factory Power.left(Eq base, Eq exponent) => Power(base, exponent);
 
+  factory Power.fromJson(Map json) =>
+      Power(Eq.fromJson(json['base']), Eq.fromJson(json['exponent']));
+
   @override
   (num, Eq) separateConstant() {
     {
@@ -581,6 +584,20 @@ class Power extends Eq {
     }
     return sb.toString();
   }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.times.name,
+    'base': base.toJson(),
+    'exponent': exponent.toJson(),
+  };
+
+  @override
+  int get hashCode => Object.hash(base, exponent);
+
+  @override
+  bool operator ==(Object other) =>
+      other is Power && base == other.base && exponent == other.exponent;
 
   static bool canCombinePower(Power a, Power b) {
     return a.exponent.isSame(b.exponent);

@@ -167,6 +167,16 @@ class Constant extends Eq {
     sb.write(value.abs().stringMaybeInt);
     return sb.toString();
   }
+
+  @override
+  num toJson() => value;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Constant && other.value.isEqual(value);
 }
 
 const zero = Constant(0);

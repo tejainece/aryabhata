@@ -139,6 +139,15 @@ class Variable extends Eq {
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) => name;
 
+  @override
+  String toJson() => name;
+
+  @override
+  int get hashCode => name.hashCode;
+
+  @override
+  bool operator ==(Object other) => other is Variable && other.name == name;
+
   static void validateName(String name) {
     if (name.isEmpty) throw ArgumentError.notNull('cannot be empty');
     for (final char in [' ', '+', '-', '*', '/', '⋅', '(', ')']) {

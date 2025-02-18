@@ -5,6 +5,11 @@ class Minus extends Eq {
 
   Minus(this.expression);
 
+  factory Minus.fromJson(Map map) {
+    assert(map['type'] == EqJsonType.minus.name);
+    return Minus(Eq.fromJson(map['expression']));
+  }
+
   @override
   num? toConstant() {
     final v = expression.simplify();
@@ -285,4 +290,17 @@ class Minus extends Eq {
     }
     return '-(${expression.toString(spec: spec)})';
   }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': EqJsonType.minus.name,
+    'expression': expression.toJson(),
+  };
+
+  @override
+  int get hashCode => expression.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Minus && expression == other.expression;
 }
