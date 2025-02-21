@@ -198,7 +198,7 @@ class Minus extends Eq {
       Minus(expression.reduceDivisions(depth: depth));
 
   @override
-  bool get isSingle => false;
+  bool get isSingle => expression.isSingle;
 
   @override
   bool get isLone => true; //expression.isLone;

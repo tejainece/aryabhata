@@ -397,7 +397,7 @@ class Power extends Eq {
   bool get isLone => true;
 
   @override
-  bool get isSingle => base.isSingle;
+  bool get isSingle => true;
 
   @override
   bool hasVariable(Variable v) =>

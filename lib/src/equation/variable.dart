@@ -192,4 +192,11 @@ const B = Variable._('B');
 
 const C = Variable._('C');
 
+const h1 = Variable._('h1');
+const k1 = Variable._('k1');
+const r1 = Variable._('r1');
+const h2 = Variable._('h2');
+const k2 = Variable._('k2');
+const r2 = Variable._('r2');
+
 const theta = Variable._('θ');

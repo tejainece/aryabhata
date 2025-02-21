@@ -36,34 +36,30 @@ void main() {
   }
 
   print(
-    '-----------------------------CIRCLE------------------------------------',
+    '-----------------------------INTERSECT POINTS-----------------------------',
   );
+  final subs = {
+    theta.name: Eq.c(0),
+    'r1': Eq.c(100),
+    'r2': Eq.c(100),
+    'h': Constant(0),
+    'k': Constant(0),
+    'c': Constant(0),
+    'a': Constant(200),
+    'b': Constant(-200),
+  };
+
+  print('A: ${quad.a.substitute(subs).simplify()}');
+
   {
     Eq first = solutions.first;
     first =
-        first.substitute({
-          theta.name: Eq.c(0),
-          'r1': Eq.c(100),
-          'r2': Eq.c(100),
-          'h': Constant(0),
-          'k': Constant(0),
-          'c': Constant(0),
-          'a': Constant(200),
-          'b': Constant(-200),
-        }).simplify();
+        first.substitute(subs).simplify();
     print(first);
 
     Eq second = solutions[1];
-    second = second.substitute({
-      theta.name: Eq.c(0),
-      'r1': Eq.c(100),
-      'r2': Eq.c(100),
-      'h': Constant(0),
-      'k': Constant(0),
-      'c': Constant(0),
-      'a': Constant(200),
-      'b': Constant(-200),
-    }).simplify();
+    second =
+        second.substitute(subs).simplify();
     print(second);
   }
 }

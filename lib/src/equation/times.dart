@@ -709,12 +709,20 @@ class Times extends Eq {
     }
     if (denominators.isNotEmpty) {
       sb.write(spec.divide);
-      final tmp = Times(denominators);
-      if (tmp.isLone) {
-        sb.write(denominators.first.toString(spec: spec));
+      final first = denominators.first;
+      if (denominators.length == 1 && first.isSingle) {
+        if(first.isSingle) {
+          sb.write(first.toString(spec: spec));
+        } else {
+          sb.write(spec.lparen);
+          sb.write(first.toString(spec: spec));
+          sb.write(spec.rparen);
+        }
       } else {
+        final tmp = Times(denominators);
         sb.write(spec.lparen);
-        for (int i = 0; i < denominators.length; i++) {
+        sb.write(tmp.toString(spec: spec));
+        /*for (int i = 0; i < denominators.length; i++) {
           final d = denominators[i];
           if (d is! Times) {
             sb.write(d.toString(spec: spec));
@@ -724,7 +732,7 @@ class Times extends Eq {
           if (i < denominators.length - 1) {
             sb.write(spec.times);
           }
-        }
+        }*/
         sb.write(spec.rparen);
       }
     }

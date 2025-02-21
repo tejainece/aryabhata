@@ -391,20 +391,31 @@ class Plus extends Eq {
   }
 
   Eq equationOf(Variable v) {
-    var left = <Eq>[];
+    var leftExps = <Eq>[];
     var rightExps = <Eq>[];
     for (var e in expressions) {
       if (e.hasVariable(v)) {
-        left.add(e);
+        leftExps.add(e);
         continue;
       }
       rightExps.add(Minus(e));
     }
-    if (left.isEmpty) {
+    if (leftExps.isEmpty) {
       return Constant(0);
     }
-    if (left.length > 1) {
-      throw UnimplementedError('Only linear equations are supported');
+    Eq left;
+    {
+      List<Eq>? tmp = Plus.tryFactorizeBy(v, leftExps);
+      if (tmp == null || tmp.any((e) => e.hasVariable(v))) {
+        throw UnimplementedError('Only linear equations are supported');
+      }
+      if(tmp.isEmpty) {
+        left = Constant(1);
+      } else if(tmp.length == 1) {
+        left = tmp[0];
+      } else {
+        left = Plus(tmp);
+      }
     }
     Eq right;
     if (rightExps.isEmpty) {
@@ -414,20 +425,7 @@ class Plus extends Eq {
     } else {
       right = Plus(rightExps);
     }
-    final e = left[0];
-    if (e is! Times) {
-      throw UnimplementedError();
-    }
-    for (final item in e.expressions) {
-      if (!item.hasVariable(v)) {
-        right = right / item;
-        continue;
-      }
-      if (item is! Variable) {
-        throw UnimplementedError();
-      }
-    }
-    return right;
+    return (right / left).simplify();
   }
 
   @override
