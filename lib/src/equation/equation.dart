@@ -92,6 +92,8 @@ abstract class Eq {
 
   Eq dissolveConstants({int? depth});
 
+  Eq dissolveImaginary();
+
   Eq shrink({int? depth});
 
   /// (x + 5) * (x + 8) = x^2 + 13x + 40
@@ -157,6 +159,8 @@ abstract class Eq {
 
   bool canDissolveMinus();
 
+  bool canDissolveImaginary();
+
   bool canShrink();
 
   bool canCombineAdditions();
@@ -196,6 +200,8 @@ abstract class Eq {
         ret = ret.dissolveMinus();
       } else if (s == Simplification.dissolveConstants) {
         ret = ret.dissolveConstants();
+      } else if (s == Simplification.dissolveImaginary) {
+        ret = ret.dissolveImaginary();
       } else if (s == Simplification.shrink) {
         ret = ret.shrink();
       } else if (s == Simplification.combineAdditions) {
@@ -231,37 +237,6 @@ abstract class Eq {
 
   dynamic toJson();
 
-  Quadratic asQuadratic(Variable x) {
-    var simplified = simplify();
-    if (simplified is! Plus) {
-      simplified = Plus([simplified]);
-    }
-    final a = <Eq>[];
-    final b = <Eq>[];
-    final c = <Eq>[];
-
-    for (var term in simplified.expressions) {
-      if (!term.hasVariable(x)) {
-        c.add(term);
-        continue;
-      }
-      Eq tmp = (term / x.pow(Constant(2)));
-      tmp = tmp.simplify();
-      if (!tmp.hasVariable(x)) {
-        a.add(tmp);
-        continue;
-      }
-      tmp = (term / x).simplify();
-      if (!tmp.hasVariable(x)) {
-        b.add(tmp);
-        continue;
-      }
-      throw UnsupportedError('$term not a polynomial');
-    }
-
-    return Quadratic(Plus(a), Plus(b), Plus(c));
-  }
-
   static Constant c(num value) => Constant(value);
 
   static Variable v(String name) => Variable(name);
@@ -270,6 +245,7 @@ abstract class Eq {
 enum Simplification {
   dissolveMinus,
   dissolveConstants,
+  dissolveImaginary,
   shrink,
   combineAdditions,
   combineMultiplications,

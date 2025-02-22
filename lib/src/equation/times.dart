@@ -152,9 +152,35 @@ class Times extends Eq {
       isMinus = !isMinus;
     }
     if (isMinus) {
-      return Minus(Times._(ret));
+      return Minus(Times(ret));
     }
-    return Times._(ret);
+    return Times(ret);
+  }
+
+  @override
+  Eq dissolveImaginary() {
+    int count = 0;
+    final ret = <Eq>[];
+    for (var e in expressions) {
+      e = e.dissolveImaginary();
+      if (e is Imaginary) {
+        count++;
+      } else {
+        ret.add(e);
+      }
+    }
+    if (count > 0) {
+      final v = i.pow(count).dissolveImaginary();
+      if(v != one) {
+        ret.add(v);
+      }
+    }
+    if(ret.isEmpty) {
+      return one;
+    } else if (ret.length == 1) {
+      return ret.first;
+    }
+    return Times(ret);
   }
 
   @override
@@ -537,6 +563,16 @@ class Times extends Eq {
   }
 
   @override
+  bool canDissolveImaginary() {
+    int count = 0;
+    for (final e in expressions) {
+      if (e.canDissolveImaginary()) return true;
+      if (e is Imaginary) count++;
+    }
+    return count > 1;
+  }
+
+  @override
   bool canFactorOutAddition() {
     for (final e in expressions) {
       if (e.canFactorOutAddition()) {
@@ -666,6 +702,7 @@ class Times extends Eq {
     }
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
+    if (canDissolveImaginary()) return Simplification.dissolveImaginary;
     if (canCombineMultiplications()) {
       return Simplification.combineMultiplications;
     }

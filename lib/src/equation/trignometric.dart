@@ -53,6 +53,9 @@ abstract class Trig extends Eq {
   }
 
   @override
+  bool canDissolveImaginary() => expression.canDissolveImaginary();
+
+  @override
   bool canCombineAdditions() => expression.canCombineAdditions();
 
   @override
@@ -164,6 +167,9 @@ class Cos extends Trig {
     }
     return Cos(inner);
   }
+
+  @override
+  Eq dissolveImaginary() => Cos(expression.dissolveImaginary());
 
   @override
   Eq combineAdditions({int? depth}) {
@@ -373,6 +379,9 @@ class Sin extends Trig {
   }
 
   @override
+  Eq dissolveImaginary() => Sin(expression.dissolveImaginary());
+
+  @override
   Eq shrink({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -578,6 +587,9 @@ class Tan extends Trig {
     }
     return Tan(inner);
   }
+
+  @override
+  Eq dissolveImaginary() => Tan(expression.dissolveImaginary());
 
   @override
   Eq shrink({int? depth}) {

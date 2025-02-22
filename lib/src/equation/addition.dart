@@ -128,6 +128,9 @@ class Plus extends Eq {
   Eq distributeMinus() => Plus(expressions.map((e) => e.distributeMinus()));
 
   @override
+  Eq dissolveImaginary() => Plus(expressions.map((e) => e.dissolveImaginary()));
+
+  @override
   Eq shrink({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -409,9 +412,9 @@ class Plus extends Eq {
       if (tmp == null || tmp.any((e) => e.hasVariable(v))) {
         throw UnimplementedError('Only linear equations are supported');
       }
-      if(tmp.isEmpty) {
+      if (tmp.isEmpty) {
         left = Constant(1);
-      } else if(tmp.length == 1) {
+      } else if (tmp.length == 1) {
         left = tmp[0];
       } else {
         left = Plus(tmp);
@@ -629,6 +632,10 @@ class Plus extends Eq {
     return countMinus > expressions.length / 2;*/
     return expressions.any((e) => e.canDissolveMinus());
   }
+
+  @override
+  bool canDissolveImaginary() =>
+      expressions.any((e) => e.canDissolveImaginary());
 
   @override
   bool canShrink() {

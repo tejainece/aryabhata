@@ -43,6 +43,9 @@ class Constant extends Eq {
   Eq dropMinus() => this;
 
   @override
+  Eq dissolveImaginary() => this;
+
+  @override
   Eq shrink({int? depth}) => this;
 
   @override
@@ -118,6 +121,9 @@ class Constant extends Eq {
 
   @override
   bool canDissolveMinus() => value.isNegative;
+
+  @override
+  bool canDissolveImaginary() => false;
 
   @override
   bool canCombineAdditions() => false;

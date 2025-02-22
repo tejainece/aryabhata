@@ -31,6 +31,9 @@ class Imaginary extends Eq {
   Eq distributeMinus() => this;
 
   @override
+  Eq dissolveImaginary() => this;
+
+  @override
   Eq shrink({int? depth}) => this;
 
   @override
@@ -89,6 +92,9 @@ class Imaginary extends Eq {
 
   @override
   bool canDissolveMinus() => false;
+
+  @override
+  bool canDissolveImaginary() => false;
 
   @override
   bool canShrink() => false;

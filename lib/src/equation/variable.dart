@@ -23,6 +23,9 @@ class Variable extends Eq {
   Eq factorOutMinus({int? depth}) => this;
 
   @override
+  Eq dissolveImaginary() => this;
+
+  @override
   Eq shrink({int? depth}) => this;
 
   @override
@@ -113,6 +116,9 @@ class Variable extends Eq {
   bool canDissolveMinus() => false;
 
   @override
+  bool canDissolveImaginary() => false;
+
+  @override
   bool canFactorOutAddition() => false;
 
   @override
@@ -179,6 +185,8 @@ const n = Variable._('n');
 const r = Variable._('r');
 
 const w = Variable._('w');
+
+const t = Variable._('t');
 
 const x = Variable._('x');
 

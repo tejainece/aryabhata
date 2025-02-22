@@ -153,6 +153,25 @@ class Power extends Eq {
   Eq dropMinus() => this;
 
   @override
+  Eq dissolveImaginary() {
+    final ec = exponent.toConstant();
+    if (base is! Imaginary || ec == null || !ec.isInt || ec.isNegative) {
+      return this;
+    }
+    final mod = ec.toInt() % 4;
+    if (mod == 0) {
+      return Constant(1);
+    } else if (mod == 1) {
+      return i;
+    } else if (mod == 2) {
+      return Constant(-1);
+    } else if (mod == 3) {
+      return -i;
+    }
+    return this;
+  }
+
+  @override
   Eq shrink({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -461,6 +480,18 @@ class Power extends Eq {
   }
 
   @override
+  bool canDissolveImaginary() {
+    if (base.canDissolveImaginary() || exponent.canDissolveImaginary()) {
+      return true;
+    }
+    final ec = exponent.toConstant();
+    if (base is! Imaginary || ec == null || !ec.isInt || ec.isNegative) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
   bool canShrink() => base.canShrink() || exponent.canShrink();
 
   @override
@@ -529,6 +560,7 @@ class Power extends Eq {
     if (s != null) return s;
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
+    if (canDissolveImaginary()) return Simplification.dissolveImaginary;
     if (canDistributeExponent()) return Simplification.distributeExponent;
     if (canExpandPowers()) return Simplification.expandPowers;
     if (canDissolvePowerOfPower()) return Simplification.dissolvePowerOfPower;

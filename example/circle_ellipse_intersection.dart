@@ -1,20 +1,23 @@
 import 'package:equation/equation.dart';
 
 void main() {
+  final r3 = Variable('r3');
   Eq circle1 =
       (x - h1).pow(Constant(2)) +
       (y - k1).pow(Constant(2)) -
       r1.pow(Constant(2));
   circle1 = circle1.simplify();
-  Eq circle2 =
-      (x - h2).pow(Constant(2)) +
-      (y - k2).pow(Constant(2)) -
-      r2.pow(Constant(2));
-  circle2 = circle2.simplify();
+  Eq ellipse =
+      ((x - h2) * Cos(theta) + (y - k2) * Sin(theta)).pow(Constant(2)) /
+          r2.pow(Constant(2)) +
+      ((x - h2) * Sin(theta) - (y - k2) * Cos(theta)).pow(Constant(2)) /
+          r3.pow(Constant(2)) -
+      one;
+  ellipse = ellipse.simplify();
   print(circle1);
-  print(circle2);
+  print(ellipse);
 
-  Eq diff = circle1 - circle2;
+  Eq diff = circle1 - ellipse;
   diff = diff.simplify();
   print(diff);
 

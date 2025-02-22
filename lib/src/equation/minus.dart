@@ -121,6 +121,9 @@ class Minus extends Eq {
   }
 
   @override
+  Eq dissolveImaginary() => Minus(expression.dissolveImaginary());
+
+  @override
   Eq shrink({int? depth}) => Minus(expression.shrink(depth: depth));
 
   @override
@@ -227,6 +230,9 @@ class Minus extends Eq {
     if (expression is Minus) return true;
     return expression is Plus;
   }
+
+  @override
+  bool canDissolveImaginary() => expression.canDissolveImaginary();
 
   @override
   bool canShrink() => expression.canShrink();

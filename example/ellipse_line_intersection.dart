@@ -49,7 +49,7 @@ void main() {
     'b': Constant(-200),
   };
 
-  print('A: ${quad.a.substitute(subs).simplify()}');
+  print('A: ${quad.c2.substitute(subs).simplify()}');
 
   {
     Eq first = solutions.first;
