@@ -136,7 +136,7 @@ class Imaginary extends Eq {
   Map<String, dynamic> toJson() => {'type': EqJsonType.imaginary.name};
 
   @override
-  int get hashCode => i.hashCode;
+  int get hashCode => runtimeType.hashCode;
 
   @override
   bool operator ==(Object other) => other is Imaginary;

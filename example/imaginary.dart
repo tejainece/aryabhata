@@ -14,4 +14,6 @@ void main() {
     final res = eq.simplify();
     print('$c => $res');
   }
+  print(Power(-1, 0.5).simplify());
+  print(Power(-2, 1/3).simplify());
 }

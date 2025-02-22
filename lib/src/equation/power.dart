@@ -7,7 +7,9 @@ class Power extends Eq {
 
   final Eq exponent;
 
-  Power(this.base, this.exponent);
+  Power._(this.base, this.exponent);
+
+  factory Power(base, exponent) => Power._(Eq.from(base), Eq.from(exponent));
 
   factory Power.right(Eq base, Eq exponent) {
     if (base is Power) {
@@ -97,7 +99,14 @@ class Power extends Eq {
       if (bc.isInfinite) {
         if (ec.isEqual(0)) return nan;
       }
-      return Constant(pow(bc, ec)).dissolveMinus();
+      if (!bc.isNegative && ec.isInt) {
+        return Constant(pow(bc, ec)).dissolveMinus();
+      } else {
+        return Times([
+          Constant(pow(bc.abs(), ec)),
+          Eq.c(cos(pi * ec)) + i * sin(pi * ec),
+        ]);
+      }
     }
     if (ec != null) {
       if (ec == 0) {
