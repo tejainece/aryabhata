@@ -18,10 +18,10 @@ class _Test {
       -(Constant(2) *
           ((Constant(4) * a * x * c) / (Constant(2) * b.pow(Constant(2))))),
       -(Constant(4) * a * x * c / (b.pow(Constant(2)))),
-      '-(4⋅a⋅x⋅c/b^2)',
+      '-4⋅a⋅x⋅c/b^2',
     ),
     _Test(x.pow(two) / x.pow(two).lpow(one), one, '1'),
-    _Test((-(a * x) - c) / b, -(a * x / b + c / b), '-(a⋅x/b+c/b)'),
+    _Test((-(a * x) - c) / b, -(a * x / b + c / b), '-a⋅x/b-c/b'),
   ];
 }
 

@@ -32,6 +32,9 @@ abstract class Trig extends Eq {
   bool get isLone => true;
 
   @override
+  bool isSimpleConstant() => expression.isSimpleConstant();
+
+  @override
   bool get isSingle => true;
 
   @override
@@ -62,7 +65,13 @@ abstract class Trig extends Eq {
   bool canFactorOutAddition() => expression.canFactorOutAddition();
 
   @override
-  bool canCombineMultiplications() => expression.canCombineMultiplications();
+  bool canCombineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return false;
+    }
+    return expression.canCombineMultiplications(depth: depth);
+  }
 
   @override
   bool canExpandMultiplications() => expression.canExpandMultiplications();

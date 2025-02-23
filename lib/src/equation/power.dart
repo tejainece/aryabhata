@@ -425,6 +425,10 @@ class Power extends Eq {
   bool get isLone => true;
 
   @override
+  bool isSimpleConstant() =>
+      base.isSimpleConstant() && exponent.isSimpleConstant();
+
+  @override
   bool get isSingle => true;
 
   @override
@@ -512,8 +516,11 @@ class Power extends Eq {
       base.canFactorOutAddition() || exponent.canFactorOutAddition();
 
   @override
-  bool canCombineMultiplications() =>
-      base.canCombineMultiplications() || exponent.canCombineMultiplications();
+  bool canCombineMultiplications({int? depth}) {
+
+    return base.canCombineMultiplications(depth: depth) ||
+        exponent.canCombineMultiplications(depth: depth);
+  }
 
   @override
   bool canExpandMultiplications() =>

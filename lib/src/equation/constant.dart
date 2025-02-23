@@ -99,6 +99,9 @@ class Constant extends Eq {
   bool get isLone => true;
 
   @override
+  bool isSimpleConstant() => true;
+
+  @override
   Eq substitute(Map<String, Eq> substitutions) => this;
 
   @override
@@ -132,7 +135,7 @@ class Constant extends Eq {
   bool canFactorOutAddition() => false;
 
   @override
-  bool canCombineMultiplications() => false;
+  bool canCombineMultiplications({int? depth}) => false;
 
   @override
   bool canExpandMultiplications() => false;
@@ -204,7 +207,7 @@ extension NumExt on num {
     if (this is int) return true;
     if (isInfinite) return false;
     if (isNaN) return false;
-    return (this - round()).abs() < 1e-8;
+    return (this.abs() - abs().round()).abs() < 1e-8;
   }
 
   int? get tryToInt => isInt ? round() : null;

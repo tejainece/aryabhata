@@ -171,11 +171,11 @@ class Times extends Eq {
     }
     if (count > 0) {
       final v = i.pow(count).dissolveImaginary();
-      if(v != one) {
+      if (v != one) {
         ret.add(v);
       }
     }
-    if(ret.isEmpty) {
+    if (ret.isEmpty) {
       return one;
     } else if (ret.length == 1) {
       return ret.first;
@@ -410,7 +410,12 @@ class Times extends Eq {
   Times multiplicativeTerms() {
     final ret = <Eq>[];
     for (var e in expressions) {
-      ret.add(e.multiplicativeTerms());
+      ret.addAll(e.multiplicativeTerms().expressions);
+    }
+    for (Eq e in ret) {
+      if (e.isSimpleConstant() && e.toConstant()!.isEqual(0)) {
+        return Times([Constant(0)]);
+      }
     }
     return Times(ret);
   }
@@ -432,8 +437,8 @@ class Times extends Eq {
       ret.add(div);
       found = true;
     }
-    if(!found) return null;
-    if(ret.length == 1) return ret.first;
+    if (!found) return null;
+    if (ret.length == 1) return ret.first;
     return Times(ret);
     /*
     final ret = multiplicativeTerms().expressions.toList();
@@ -466,8 +471,9 @@ class Times extends Eq {
         e.reduceDivisions(depth: depth).multiplicativeTerms().expressions,
       );
     }
-    var reduced =
-        Times(parts).combineMultiplications(depth: 1).dissolveConstants();
+    var reduced = Times(
+      parts,
+    ).combineMultiplications(depth: 1); //.dissolveConstants();
     return reduced;
   }
 
@@ -482,6 +488,9 @@ class Times extends Eq {
     return expressions.every((e) => e.isLone);
     // return false;
   }
+
+  @override
+  bool isSimpleConstant() => expressions.every((e) => e.isSimpleConstant());
 
   @override
   bool hasVariable(Variable v) => expressions.any((e) => e.hasVariable(v));
@@ -593,14 +602,21 @@ class Times extends Eq {
   }
 
   @override
-  bool canCombineMultiplications() {
+  bool canCombineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return false;
+    }
     for (final e in expressions) {
-      if (e.canCombineMultiplications()) return true;
+      if (e.canCombineMultiplications(depth: depth)) return true;
     }
     for (int i = 0; i < expressions.length; i++) {
       final a = expressions[i];
+      final aIsC = a.isSimpleConstant();
       for (int j = i + 1; j < expressions.length; j++) {
         final b = expressions[j];
+        final bIsC = b.isSimpleConstant();
+        if (aIsC && bIsC) return true;
         final tmp = tryCombineMultiplicativeTerms(a, b);
         if (tmp != null) return true;
       }
@@ -633,12 +649,9 @@ class Times extends Eq {
       if (e.canReduceDivisions()) return true;
       parts.addAll(e.multiplicativeTerms().expressions);
     }
-    /*if (Times(parts).canCombineMultiplications()) {
+    if (Times(parts).canCombineMultiplications(depth: 1)) {
       return true;
     }
-    if (Times(parts).canDissolveConstants()) {
-      return true;
-    }*/
     return false;
   }
 
@@ -748,13 +761,17 @@ class Times extends Eq {
       sb.write(spec.divide);
       final first = denominators.first;
       if (denominators.length == 1 && first.isSingle) {
-        if(first.isSingle) {
+        if (first.isSingle) {
           sb.write(first.toString(spec: spec));
         } else {
           sb.write(spec.lparen);
           sb.write(first.toString(spec: spec));
           sb.write(spec.rparen);
         }
+      } else if (denominators.length == 1) {
+        sb.write(spec.lparen);
+        sb.write(first.toString(spec: spec));
+        sb.write(spec.rparen);
       } else {
         final tmp = Times(denominators);
         sb.write(spec.lparen);

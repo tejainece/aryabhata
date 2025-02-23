@@ -76,6 +76,9 @@ class Imaginary extends Eq {
   bool get isLone => true;
 
   @override
+  bool isSimpleConstant() => false;
+
+  @override
   bool get isSingle => true;
 
   @override
@@ -106,7 +109,7 @@ class Imaginary extends Eq {
   bool canCombineAdditions() => false;
 
   @override
-  bool canCombineMultiplications() => false;
+  bool canCombineMultiplications({int? depth}) => false;
 
   @override
   bool canExpandMultiplications() => false;

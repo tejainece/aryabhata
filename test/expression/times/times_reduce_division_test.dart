@@ -30,6 +30,7 @@ void main() {
   group('Times.reduceDivision', () {
     test('test', () {
       for (final test in _Test.cases) {
+        print(test.eq);
         final res = test.eq.reduceDivisions();
         expect(res, EqEqualityMatcher(test.res));
         expect(test.eq.canReduceDivisions(), test.can);

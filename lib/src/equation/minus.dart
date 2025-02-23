@@ -207,6 +207,9 @@ class Minus extends Eq {
   bool get isLone => true; //expression.isLone;
 
   @override
+  bool isSimpleConstant() => expression.isSimpleConstant();
+
+  @override
   Eq substitute(Map<String, Eq> substitutions) =>
       Minus(expression.substitute(substitutions));
 
@@ -244,7 +247,8 @@ class Minus extends Eq {
   bool canCombineAdditions() => expression.canCombineAdditions();
 
   @override
-  bool canCombineMultiplications() => expression.canCombineMultiplications();
+  bool canCombineMultiplications({int? depth}) =>
+      expression.canCombineMultiplications(depth: depth);
 
   @override
   bool canExpandMultiplications() => expression.canExpandMultiplications();

@@ -11,13 +11,20 @@ class Plus extends Eq {
     : assert(expressions.isNotEmpty),
       expressions = UnmodifiableListView<Eq>(expressions.toList());
 
-  factory Plus(Iterable<Eq> expressions) {
+  factory Plus(Iterable expressions) {
+    expressions = expressions.map((e) => Eq.from(e)).toList();
     final ret = <Eq>[];
     for (final e in expressions) {
       if (e is Plus) {
         ret.addAll(e.expressions);
       } else if (e is Times && e.expressions.length == 1) {
         ret.add(e.expressions.first);
+      } else if (e is Constant && e.value.isEqual(0)) {
+        continue;
+      } else if (e is Minus &&
+          e.expression is Constant &&
+          (e.expression as Constant).value.isEqual(0)) {
+        continue;
       } else {
         ret.add(e);
       }
@@ -566,6 +573,9 @@ class Plus extends Eq {
   }
 
   @override
+  bool isSimpleConstant() => expressions.every((e) => e.isSimpleConstant());
+
+  @override
   Simplification? canSimplify() {
     if (canShrink()) return Simplification.shrink;
     for (final e in expressions) {
@@ -670,8 +680,18 @@ class Plus extends Eq {
   }
 
   @override
-  bool canCombineMultiplications() =>
-      expressions.any((e) => e.canCombineMultiplications());
+  bool canCombineMultiplications({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return false;
+    }
+    for (final e in expressions) {
+      if (e.canCombineMultiplications(depth: depth)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   @override
   bool canExpandMultiplications() =>
@@ -775,7 +795,7 @@ class Plus extends Eq {
 
   static List<Eq>? tryFactorizeBy(Eq factor, List<Eq> terms) {
     // assert(factor.isSingle);
-    if (factor == one) return null;
+    if (factor == one || factor == zero) return null;
     final ret = <Eq>[];
     for (int i = 0; i < terms.length; i++) {
       final term = terms[i];

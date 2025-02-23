@@ -18,9 +18,12 @@ class Quadratic implements Polynomial {
   List<Eq> solve() {
     final ret = <Eq>[];
     ret.addAll([
-      ((-c1 + discriminant.pow(0.5)) / (Eq.c(2) * c2)).simplify(),
-      ((-c1 - discriminant.pow(0.5)) / (Eq.c(2) * c2)).simplify(),
+      ((-c1 + discriminant.pow(0.5)) / (Eq.c(2) * c2)),
+      ((-c1 - discriminant.pow(0.5)) / (Eq.c(2) * c2)),
     ]);
+    for (var i = 0; i < ret.length; i++) {
+      ret[i] = ret[i].simplify(debug: true);
+    }
     return ret;
   }
 
@@ -42,8 +45,7 @@ extension QuadraticEqExt on Eq {
         c0.add(term);
         continue;
       }
-      Eq tmp = (term / x.pow(Constant(2)));
-      tmp = tmp.simplify();
+      Eq tmp = (term / x.pow(Constant(2))).simplify();
       if (!tmp.hasVariable(x)) {
         c2.add(tmp);
         continue;

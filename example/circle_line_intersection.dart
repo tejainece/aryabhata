@@ -7,8 +7,6 @@ void main() {
 
   Eq circle =
       (x - h).pow(Constant(2)) + (y - k).pow(Constant(2)) - r.pow(Constant(2));
-  print(circle);
-
   circle = circle.simplify();
   print(circle);
 
@@ -39,7 +37,7 @@ void main() {
   );
   final quad = circle.asQuadratic(x);
   print(quad.discriminant);
-  // print(quad);
+  print(quad);
   print(
     quad.discriminant.substitute({
       'h': Constant(0),
@@ -54,14 +52,12 @@ void main() {
   print(
     '-----------------------------SOLUTIONS------------------------------------',
   );
-  var [sol1, sol2] = quad.solve();
-  sol1 = sol1.simplify(debug: true);
-  print(sol1);
-  sol2 = sol2.simplify();
-  print(sol2);
+  var [x1, x2] = quad.solve();
+  print(x1);
+  print(x2);
 
-  sol1 =
-      sol1.substitute({
+  x1 =
+      x1.substitute({
         'h': Constant(0),
         'k': Constant(0),
         'c': Constant(0),
@@ -69,9 +65,9 @@ void main() {
         'b': Constant(-200),
         'r': Constant(100),
       }).simplify();
-  print(sol1);
-  sol2 =
-      sol2.substitute({
+  print(x1);
+  x2 =
+      x2.substitute({
         'h': Constant(0),
         'k': Constant(0),
         'c': Constant(0),
@@ -79,22 +75,21 @@ void main() {
         'b': Constant(-200),
         'r': Constant(100),
       }).simplify();
-  print(sol2);
+  print(x2);
 
-  print(
-    line.substitute({
-      'c': Constant(0),
-      'a': Constant(200),
-      'b': Constant(-200),
-      'x': sol1,
-    }).simplify(),
-  );
-  print(
-    line.substitute({
-      'c': Constant(0),
-      'a': Constant(200),
-      'b': Constant(-200),
-      'x': sol2,
-    }).simplify(),
-  );
+  Eq y1 = line.substitute({
+    'c': Constant(0),
+    'a': Constant(200),
+    'b': Constant(-200),
+    'x': x1,
+  });
+  print(y1.simplify());
+  Eq y2 =
+      line.substitute({
+        'c': Constant(0),
+        'a': Constant(200),
+        'b': Constant(-200),
+        'x': x2,
+      }).simplify();
+  print(y2);
 }

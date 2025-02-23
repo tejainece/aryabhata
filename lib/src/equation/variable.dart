@@ -89,6 +89,9 @@ class Variable extends Eq {
   bool get isLone => true;
 
   @override
+  bool isSimpleConstant() => false;
+
+  @override
   bool get isSingle => true;
   @override
   bool hasVariable(Variable v) => v.name == name;
@@ -122,7 +125,7 @@ class Variable extends Eq {
   bool canFactorOutAddition() => false;
 
   @override
-  bool canCombineMultiplications() => false;
+  bool canCombineMultiplications({int? depth}) => false;
 
   @override
   bool canExpandMultiplications() => false;

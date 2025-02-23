@@ -73,11 +73,16 @@ void main() {
         a * c / (b.pow(2) + a.pow(2) / b.pow(2));
   }*/
 
-  {
+  /*{
     Eq eq = h / (a.pow(2) / b.pow(2) + 1);
     Eq res = eq.simplify();
     Eq res1 = eq.reduceDivisions();
     print(res);
     print(res1);
+  }*/
+
+  {
+    Eq eq = Plus([i, 0]);
+    print(eq.multiplicativeTerms());
   }
 }

@@ -76,6 +76,8 @@ abstract class Eq {
 
   num? toConstant();
 
+  bool isSimpleConstant();
+
   Eq withConstant(num c) {
     if (c.abs() < 1e-6) {
       return Constant(0);
@@ -167,7 +169,7 @@ abstract class Eq {
 
   bool canFactorOutAddition();
 
-  bool canCombineMultiplications();
+  bool canCombineMultiplications({int? depth});
 
   bool canExpandMultiplications();
 
