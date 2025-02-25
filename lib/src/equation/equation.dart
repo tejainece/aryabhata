@@ -134,6 +134,9 @@ abstract class Eq {
   /// (x ^ y) ^ z => x ^ (y * z)
   Eq dissolvePowerOfPower({int? depth});
 
+  /// (1 + 2*i)^(0.5) =>
+  Eq dissolvePowerOfComplex({int? depth});
+
   Eq factorOutAddition();
 
   Times multiplicativeTerms();
@@ -182,6 +185,8 @@ abstract class Eq {
   bool canExpandPowers();
 
   bool canDissolvePowerOfPower();
+
+  bool canDissolvePowerOfComplex();
 
   bool canDistributeExponent();
 

@@ -89,6 +89,9 @@ abstract class Trig extends Eq {
   bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
 
   @override
+  bool canDissolvePowerOfComplex() => expression.canDissolvePowerOfComplex();
+
+  @override
   bool canDistributeExponent() => expression.canDistributeExponent();
 
   @override
@@ -223,6 +226,15 @@ class Cos extends Trig {
       if (depth < 0) return this;
     }
     return Cos(expression.dissolvePowerOfPower(depth: depth));
+  }
+
+  @override
+  Eq dissolvePowerOfComplex({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Cos(expression.dissolvePowerOfComplex(depth: depth));
   }
 
   @override
@@ -433,6 +445,15 @@ class Sin extends Trig {
       if (depth < 0) return this;
     }
     return Sin(expression.dissolvePowerOfPower(depth: depth));
+  }
+
+  @override
+  Eq dissolvePowerOfComplex({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Sin(expression.dissolvePowerOfComplex(depth: depth));
   }
 
   @override
@@ -674,6 +695,15 @@ class Tan extends Trig {
       if (depth < 0) return this;
     }
     return Tan(expression.dissolvePowerOfPower(depth: depth));
+  }
+
+  @override
+  Eq dissolvePowerOfComplex({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    return Tan(expression.dissolvePowerOfComplex(depth: depth));
   }
 
   @override

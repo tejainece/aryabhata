@@ -291,12 +291,18 @@ class Power extends Eq {
   }
 
   @override
-  Eq dissolvePowerOfComplex() {
+  Eq dissolvePowerOfComplex({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+
+    final exponent = this.exponent.dissolvePowerOfComplex(depth: depth);
     if (!exponent.isSimpleConstant()) return this;
     final ec = exponent.toConstant()!;
-    if(ec.isInt) return this;
+    if (ec.isInt) return this;
     Plus? plus;
-    final base = this.base;
+    final base = this.base.dissolvePowerOfComplex(depth: depth);
     if (base is Plus) {
       plus = base;
     } else if (base is Minus) {
@@ -306,15 +312,15 @@ class Power extends Eq {
       }
     }
     if (plus == null) {
-      return this;
+      return Power(base, exponent);
     }
     final rec = plus.toComplexConstant();
     if (rec == null || rec.$1.isEqual(0) || rec.$2.isEqual(0)) {
-      return this;
+      return Power(base, exponent);
     }
     final (real, imaginary) = rec;
     num r = sqrt((real * real) + (imaginary * imaginary));
-    final theta = atan(imaginary/real);
+    final theta = atan(imaginary / real);
     return Times([
       Constant(pow(r, ec)),
       Cos(Constant(theta * ec)) + i * Sin(Constant(theta * ec)),
@@ -591,6 +597,35 @@ class Power extends Eq {
     }
     if (base is Power) return true;
     return base is Minus && (base as Minus).expression is Power;
+  }
+
+  @override
+  bool canDissolvePowerOfComplex() {
+    if (this.base.canDissolvePowerOfComplex() ||
+        exponent.canDissolvePowerOfComplex()) {
+      return true;
+    }
+    if (!exponent.isSimpleConstant()) return false;
+    final ec = exponent.toConstant()!;
+    if (ec.isInt) return false;
+    Plus? plus;
+    final base = this.base;
+    if (base is Plus) {
+      plus = base;
+    } else if (base is Minus) {
+      final e = base.dissolveMinus(depth: 1);
+      if (e is Plus) {
+        plus = e;
+      }
+    }
+    if (plus == null) {
+      return false;
+    }
+    final rec = plus.toComplexConstant();
+    if (rec == null || rec.$1.isEqual(0) || rec.$2.isEqual(0)) {
+      return false;
+    }
+    return true;
   }
 
   @override

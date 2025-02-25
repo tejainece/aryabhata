@@ -67,6 +67,9 @@ class Imaginary extends Eq {
   Eq dissolvePowerOfPower({int? depth}) => this;
 
   @override
+  Eq dissolvePowerOfComplex({int? depth}) => this;
+
+  @override
   Eq reduceDivisions({int? depth}) => this;
 
   @override
@@ -125,6 +128,9 @@ class Imaginary extends Eq {
 
   @override
   bool canDissolvePowerOfPower() => false;
+
+  @override
+  bool canDissolvePowerOfComplex() => false;
 
   @override
   bool canDistributeExponent() => false;

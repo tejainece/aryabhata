@@ -177,6 +177,10 @@ class Minus extends Eq {
       Minus(expression.dissolvePowerOfPower());
 
   @override
+  Eq dissolvePowerOfComplex({int? depth}) =>
+      Minus(expression.dissolvePowerOfComplex(depth: depth));
+
+  @override
   Eq factorOutAddition() =>
       Minus(expression.factorOutAddition()).dissolveMinus(depth: 1);
 
@@ -264,6 +268,9 @@ class Minus extends Eq {
 
   @override
   bool canDissolvePowerOfPower() => expression.canDissolvePowerOfPower();
+
+  @override
+  bool canDissolvePowerOfComplex() => expression.canDissolvePowerOfComplex();
 
   @override
   bool canDistributeExponent() => expression.canDistributeExponent();

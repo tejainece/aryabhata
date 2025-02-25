@@ -566,6 +566,19 @@ class Plus extends Eq {
   }
 
   @override
+  Eq dissolvePowerOfComplex({int? depth}) {
+    if (depth != null) {
+      depth = depth - 1;
+      if (depth < 0) return this;
+    }
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.dissolvePowerOfComplex(depth: depth));
+    }
+    return Plus(list);
+  }
+
+  @override
   Eq? tryCancelDivision(Eq other) {
     if (isSame(other)) return one;
     if (isSame(Minus(other))) return -one;
@@ -736,6 +749,14 @@ class Plus extends Eq {
   bool canDissolvePowerOfPower() {
     for (final e in expressions) {
       if (e.canDissolvePowerOfPower()) return true;
+    }
+    return false;
+  }
+
+  @override
+  bool canDissolvePowerOfComplex() {
+    for (final e in expressions) {
+      if (e.canDissolvePowerOfComplex()) return true;
     }
     return false;
   }
