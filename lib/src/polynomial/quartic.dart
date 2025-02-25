@@ -75,7 +75,7 @@ class Quartic implements Polynomial {
       ..add((-fb + q7 + temp.pow(0.5)) / 4);
 
     for (var i = 0; i < solutions.length; i++) {
-      solutions[i] = solutions[i].simplify();
+      solutions[i] = solutions[i].simplify(debug: true);
     }
 
     return solutions;

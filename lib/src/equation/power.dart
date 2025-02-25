@@ -77,7 +77,7 @@ class Power extends Eq {
   @override
   num? toConstant() {
     final ret = dissolveConstants();
-    if (ret is Constant || ret is Minus) {
+    if (ret.isSimpleConstant()) {
       return ret.toConstant();
     }
     return null;
@@ -99,7 +99,7 @@ class Power extends Eq {
       if (bc.isInfinite) {
         if (ec.isEqual(0)) return nan;
       }
-      if (!bc.isNegative && ec.isInt) {
+      if (!bc.isNegative || ec.isInt) {
         return Constant(pow(bc, ec)).dissolveMinus();
       } else {
         return Times([
@@ -291,6 +291,37 @@ class Power extends Eq {
   }
 
   @override
+  Eq dissolvePowerOfComplex() {
+    if (!exponent.isSimpleConstant()) return this;
+    final ec = exponent.toConstant()!;
+    if(ec.isInt) return this;
+    Plus? plus;
+    final base = this.base;
+    if (base is Plus) {
+      plus = base;
+    } else if (base is Minus) {
+      final e = base.dissolveMinus(depth: 1);
+      if (e is Plus) {
+        plus = e;
+      }
+    }
+    if (plus == null) {
+      return this;
+    }
+    final rec = plus.toComplexConstant();
+    if (rec == null || rec.$1.isEqual(0) || rec.$2.isEqual(0)) {
+      return this;
+    }
+    final (real, imaginary) = rec;
+    num r = sqrt((real * real) + (imaginary * imaginary));
+    final theta = atan(imaginary/real);
+    return Times([
+      Constant(pow(r, ec)),
+      Cos(Constant(theta * ec)) + i * Sin(Constant(theta * ec)),
+    ]);
+  }
+
+  @override
   Eq expandDivision({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -425,8 +456,13 @@ class Power extends Eq {
   bool get isLone => true;
 
   @override
-  bool isSimpleConstant() =>
-      base.isSimpleConstant() && exponent.isSimpleConstant();
+  bool isSimpleConstant() {
+    if (!base.isSimpleConstant() || !exponent.isSimpleConstant()) return false;
+    if (base.toConstant()!.isNegative && !exponent.toConstant()!.isInt) {
+      return false;
+    }
+    return true;
+  }
 
   @override
   bool get isSingle => true;
@@ -517,7 +553,6 @@ class Power extends Eq {
 
   @override
   bool canCombineMultiplications({int? depth}) {
-
     return base.canCombineMultiplications(depth: depth) ||
         exponent.canCombineMultiplications(depth: depth);
   }
@@ -615,7 +650,7 @@ class Power extends Eq {
   @override
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
     final sb = StringBuffer();
-    if (base.isLone && base is! Minus && base is! Power) {
+    if (base.isSingle && base is! Power) {
       sb.write(base.toString(spec: spec));
     } else {
       sb.write(spec.lparen);
@@ -635,7 +670,7 @@ class Power extends Eq {
 
   @override
   Map<String, dynamic> toJson() => {
-    'type': EqJsonType.times.name,
+    'type': EqJsonType.power.name,
     'base': base.toJson(),
     'exponent': exponent.toJson(),
   };

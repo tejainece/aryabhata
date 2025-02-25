@@ -131,6 +131,32 @@ class Plus extends Eq {
     return Plus(list);
   }
 
+  (num, num)? toComplexConstant() {
+    num real = 0;
+    num imaginary = 0;
+    for (Eq e in expressions) {
+      if (e.isSimpleConstant()) {
+        real += e.toConstant()!;
+        continue;
+      } else if(e is Imaginary) {
+        imaginary += 1;
+      } else if (e is! Times) {
+        return null;
+      }
+      if ((e as Times).expressions.length != 2) {
+        return null;
+      }
+      final rem = e.expressions.where((e) => e != i).toList();
+      if (rem.length != 1) {
+        return null;
+      } else if (!rem.first.isSimpleConstant()) {
+        return null;
+      }
+      imaginary += rem.first.toConstant()!;
+    }
+    return (real, imaginary);
+  }
+
   @override
   Eq distributeMinus() => Plus(expressions.map((e) => e.distributeMinus()));
 

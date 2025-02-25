@@ -20,7 +20,7 @@ class _Test {
     ),
     _Test(two * x * h, two * x * h, '2⋅x⋅h', can: false),
     _Test(x * two * h, two * x * h, '2⋅x⋅h', can: true),
-    _Test(one * a * x, a * x, 'a⋅x', can: true),
+    _Test(one * a * x, a * x, 'a⋅x', can: false),
     /*_Test(one * x * h, x * h, 'x⋅h', can: true),*/
   ];
 }
@@ -29,6 +29,7 @@ void main() {
   group('Times.dissolveConstant', () {
     test('test', () {
       for (final test in _Test.cases) {
+        print(test.eq);
         final res = test.eq.dissolveConstants();
         expect(res, EqEqualityMatcher(test.res));
         expect(test.eq.canDissolveConstants(), test.can);

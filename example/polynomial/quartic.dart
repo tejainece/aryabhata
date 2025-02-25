@@ -8,5 +8,6 @@ void main() {
   final quartic = eq.asQuartic(t);
   print(quartic);
 
-  print(quartic.solve());
+  final sols = quartic.solve();
+  print(sols.first.simplify());
 }
