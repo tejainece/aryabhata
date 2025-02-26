@@ -139,10 +139,16 @@ class Plus extends Eq {
         continue;
       } else if (e is Imaginary) {
         imaginary += 1;
-      } else if (e is! Times) {
+      }
+      num minus = 1;
+      if (e is Minus) {
+        minus = -1;
+        e = e.expression;
+      }
+      if (e is! Times) {
         return null;
       }
-      if ((e as Times).expressions.length != 2) {
+      if (e.expressions.length != 2) {
         return null;
       }
       final rem = e.expressions.where((e) => e != i).toList();
@@ -151,7 +157,7 @@ class Plus extends Eq {
       } else if (!rem.first.isSimpleConstant()) {
         return null;
       }
-      imaginary += rem.first.toConstant()!;
+      imaginary += minus * rem.first.toConstant()!;
     }
     return (real, imaginary);
   }
@@ -578,6 +584,15 @@ class Plus extends Eq {
   }
 
   @override
+  Eq rationalizeComplexDenominator() {
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.rationalizeComplexDenominator());
+    }
+    return Plus(list);
+  }
+
+  @override
   Eq? tryCancelDivision(Eq other) {
     if (isSame(other)) return one;
     if (isSame(Minus(other))) return -one;
@@ -621,11 +636,11 @@ class Plus extends Eq {
 
   @override
   Simplification? canSimplify() {
-    if (canShrink()) return Simplification.shrink;
     for (final e in expressions) {
       final s = e.canSimplify();
       if (s != null) return s;
     }
+    if (canShrink()) return Simplification.shrink;
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canCombineAdditions()) return Simplification.combineAdditions;
     return null;
@@ -669,7 +684,7 @@ class Plus extends Eq {
       final e = expressions[i];
       if (e.canDissolveConstants()) return true;
       if (!e.isSimpleConstant()) continue;
-      if(i > 0) return true;
+      if (i > 0) return true;
       countConstants++;
     }
     return countConstants > 1;
@@ -761,6 +776,14 @@ class Plus extends Eq {
   bool canDissolvePowerOfComplex() {
     for (final e in expressions) {
       if (e.canDissolvePowerOfComplex()) return true;
+    }
+    return false;
+  }
+
+  @override
+  bool canRationalizeComplexDenominator() {
+    for (final e in expressions) {
+      if (e.canRationalizeComplexDenominator()) return true;
     }
     return false;
   }

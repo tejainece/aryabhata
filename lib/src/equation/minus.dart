@@ -181,6 +181,10 @@ class Minus extends Eq {
       Minus(expression.dissolvePowerOfComplex(depth: depth));
 
   @override
+  Eq rationalizeComplexDenominator() =>
+      Minus(expression.rationalizeComplexDenominator());
+
+  @override
   Eq factorOutAddition() =>
       Minus(expression.factorOutAddition()).dissolveMinus(depth: 1);
 
@@ -280,6 +284,10 @@ class Minus extends Eq {
 
   @override
   bool canDistributeExponent() => expression.canDistributeExponent();
+
+  @override
+  bool canRationalizeComplexDenominator() =>
+      expression.canRationalizeComplexDenominator();
 
   @override
   Simplification? canSimplify() {

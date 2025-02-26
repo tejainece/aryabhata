@@ -343,6 +343,15 @@ class Times extends Eq {
   }
 
   @override
+  Eq rationalizeComplexDenominator() {
+    final list = <Eq>[];
+    for (final e in expressions) {
+      list.add(e.rationalizeComplexDenominator());
+    }
+    return Times(list);
+  }
+
+  @override
   Eq combineMultiplications({int? depth}) {
     if (depth != null) {
       depth = depth - 1;
@@ -591,7 +600,7 @@ class Times extends Eq {
       final e = expressions[i];
       if (e.canDissolveConstants()) return true;
       if (!e.isSimpleConstant()) continue;
-      if(i > 0) return true;
+      if (i > 0) return true;
       countConstants++;
     }
     return countConstants > 1;
@@ -757,6 +766,14 @@ class Times extends Eq {
   }
 
   @override
+  bool canRationalizeComplexDenominator() {
+    for (final e in expressions) {
+      if (e.canRationalizeComplexDenominator()) return true;
+    }
+    return false;
+  }
+
+  @override
   bool canDistributeExponent() {
     for (final e in expressions) {
       if (e.canDistributeExponent()) return true;
@@ -766,11 +783,11 @@ class Times extends Eq {
 
   @override
   Simplification? canSimplify() {
-    if (canShrink()) return Simplification.shrink;
     for (final e in expressions) {
       final s = e.canSimplify();
       if (s != null) return s;
     }
+    if (canShrink()) return Simplification.shrink;
     if (canDissolveConstants()) return Simplification.dissolveConstants;
     if (canDissolveMinus()) return Simplification.dissolveMinus;
     if (canDissolveImaginary()) return Simplification.dissolveImaginary;
@@ -801,7 +818,7 @@ class Times extends Eq {
     if (numerators.isNotEmpty) {
       for (int i = 0; i < numerators.length; i++) {
         final n = numerators[i];
-        if (n.needsParenthesis(noMinus: true)) {
+        if (n.needsParenthesis()) {
           sb.write(spec.lparen);
           sb.write(n.toString(spec: spec));
           sb.write(spec.rparen);

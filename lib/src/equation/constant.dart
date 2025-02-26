@@ -73,6 +73,9 @@ class Constant extends Eq {
   Eq dissolvePowerOfComplex({int? depth}) => this;
 
   @override
+  Eq rationalizeComplexDenominator() => this;
+
+  @override
   Eq distributeExponent({int? depth}) => this;
 
   @override
@@ -163,6 +166,9 @@ class Constant extends Eq {
 
   @override
   bool canDissolvePowerOfComplex() => false;
+
+  @override
+  bool canRationalizeComplexDenominator() => false;
 
   @override
   bool canDistributeExponent() => false;

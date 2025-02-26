@@ -163,9 +163,12 @@ class Power extends Eq {
 
   @override
   Eq dissolveImaginary() {
+    final exponent = this.exponent.dissolveImaginary();
+    final base = this.base.dissolveImaginary();
     final ec = exponent.toConstant();
-    if (base is! Imaginary || ec == null || !ec.isInt || ec.isNegative) {
-      return this;
+    // TODO handle negative exponent
+    if (base is! Imaginary || ec == null || !ec.isInt) {
+      return Power(base, exponent);
     }
     final mod = ec.toInt() % 4;
     if (mod == 0) {
@@ -296,13 +299,12 @@ class Power extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
-
+    final base = this.base.dissolvePowerOfComplex(depth: depth);
     final exponent = this.exponent.dissolvePowerOfComplex(depth: depth);
     if (!exponent.isSimpleConstant()) return this;
     final ec = exponent.toConstant()!;
-    if (ec.isInt) return this;
+    if (ec.isInt) return Power(base, exponent);
     Plus? plus;
-    final base = this.base.dissolvePowerOfComplex(depth: depth);
     if (base is Plus) {
       plus = base;
     } else if (base is Minus) {
@@ -323,8 +325,32 @@ class Power extends Eq {
     final theta = atan(imaginary / real);
     return Times([
       Constant(pow(r, ec)),
-      Cos(Constant(theta * ec)) + i * Sin(Constant(theta * ec)),
+      Constant(cos(theta * ec)) + i * Constant(sin(theta * ec)),
     ]);
+  }
+
+  @override
+  Eq rationalizeComplexDenominator() {
+    final base = this.base.rationalizeComplexDenominator();
+    final exponent = this.exponent.rationalizeComplexDenominator();
+    if (exponent != -one) return Power(base, exponent);
+    Plus? plus;
+    if (base is Plus) {
+      plus = base;
+    } else if (base is Minus) {
+      final e = base.dissolveMinus(depth: 1);
+      if (e is Plus) {
+        plus = e;
+      }
+    }
+    if (plus == null) return Power(base, exponent);
+    final rec = plus.toComplexConstant();
+    if (rec == null || rec.$1.isEqual(0) || rec.$2.isEqual(0)) {
+      return Power(base, exponent);
+    }
+    final (real, imaginary) = rec;
+    final denom = real * real + imaginary * imaginary;
+    return Plus([real / denom, imaginary / denom]);
   }
 
   @override
@@ -503,8 +529,8 @@ class Power extends Eq {
     if (base.canDissolveConstants() || exponent.canDissolveConstants()) {
       return true;
     }
-    final bc = base.toConstant();
-    final ec = exponent.toConstant();
+    final bc = base.isSimpleConstant() ? base.toConstant()! : null;
+    final ec = exponent.isSimpleConstant() ? exponent.toConstant()! : null;
     if ((bc?.isNaN ?? false) || (ec?.isNaN ?? false)) return true;
     if (ec != null && bc != null) {
       return true;
@@ -543,7 +569,7 @@ class Power extends Eq {
       return true;
     }
     final ec = exponent.toConstant();
-    if (base is! Imaginary || ec == null || !ec.isInt || ec.isNegative) {
+    if (base is! Imaginary || ec == null || !ec.isInt) {
       return false;
     }
     return true;
@@ -632,6 +658,30 @@ class Power extends Eq {
   }
 
   @override
+  bool canRationalizeComplexDenominator() {
+    if (base.canRationalizeComplexDenominator() ||
+        exponent.canRationalizeComplexDenominator()) {
+      return true;
+    }
+    if (exponent != -one) return false;
+    Plus? plus;
+    if (base is Plus) {
+      plus = base as Plus;
+    } else if (base is Minus) {
+      final e = base.dissolveMinus(depth: 1);
+      if (e is Plus) {
+        plus = e;
+      }
+    }
+    if (plus == null) return false;
+    final rec = plus.toComplexConstant();
+    if (rec == null || rec.$1.isEqual(0) || rec.$2.isEqual(0)) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
   bool canDistributeExponent() {
     if (base.canDistributeExponent() || exponent.canDistributeExponent()) {
       return true;
@@ -655,6 +705,9 @@ class Power extends Eq {
     if (canDissolvePowerOfPower()) return Simplification.dissolvePowerOfPower;
     if (canDissolvePowerOfComplex()) {
       return Simplification.dissolvePowerOfComplex;
+    }
+    if (canRationalizeComplexDenominator()) {
+      return Simplification.rationalizeComplexDenominator;
     }
     return null;
   }

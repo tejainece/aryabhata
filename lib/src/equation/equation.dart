@@ -137,6 +137,9 @@ abstract class Eq {
   /// (1 + 2*i)^(0.5) =>
   Eq dissolvePowerOfComplex({int? depth});
 
+  /// 1/(1+i) => 0.5-0.5*i
+  Eq rationalizeComplexDenominator();
+
   Eq factorOutAddition();
 
   Times multiplicativeTerms();
@@ -190,6 +193,8 @@ abstract class Eq {
 
   bool canDissolvePowerOfComplex();
 
+  bool canRationalizeComplexDenominator();
+
   bool canDistributeExponent();
 
   Simplification? canSimplify();
@@ -231,6 +236,8 @@ abstract class Eq {
         ret = ret.dissolvePowerOfPower();
       } else if(s == Simplification.dissolvePowerOfComplex) {
         ret = ret.dissolvePowerOfComplex();
+      } else if(s == Simplification.rationalizeComplexDenominator) {
+        ret = ret.rationalizeComplexDenominator();
       } else if (s == Simplification.distributeExponent) {
         ret = ret.distributeExponent();
       } else {
@@ -267,6 +274,7 @@ enum Simplification {
   expandPowers,
   dissolvePowerOfPower,
   dissolvePowerOfComplex,
+  rationalizeComplexDenominator,
   distributeExponent,
 }
 

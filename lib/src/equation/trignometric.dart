@@ -95,6 +95,10 @@ abstract class Trig extends Eq {
   bool canDissolvePowerOfComplex() => expression.canDissolvePowerOfComplex();
 
   @override
+  bool canRationalizeComplexDenominator() =>
+      expression.canRationalizeComplexDenominator();
+
+  @override
   bool canDistributeExponent() => expression.canDistributeExponent();
 
   @override
@@ -273,6 +277,10 @@ class Cos extends Trig {
 
   @override
   Eq factorOutAddition() => Cos(expression.factorOutAddition());
+
+  @override
+  Eq rationalizeComplexDenominator() =>
+      Cos(expression.rationalizeComplexDenominator());
 
   @override
   bool hasVariable(Variable v) => expression.hasVariable(v);
@@ -494,6 +502,10 @@ class Sin extends Trig {
   Eq factorOutAddition() => Sin(expression.factorOutAddition());
 
   @override
+  Eq rationalizeComplexDenominator() =>
+      Sin(expression.rationalizeComplexDenominator());
+
+  @override
   Eq substitute(Map<String, Eq> substitutions) =>
       Sin(expression.substitute(substitutions));
 
@@ -708,6 +720,10 @@ class Tan extends Trig {
     }
     return Tan(expression.dissolvePowerOfComplex(depth: depth));
   }
+
+  @override
+  Eq rationalizeComplexDenominator() =>
+      Tan(expression.rationalizeComplexDenominator());
 
   @override
   Eq factorOutAddition() => Tan(expression.factorOutAddition());

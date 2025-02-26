@@ -47,6 +47,9 @@ class Variable extends Eq {
   Eq dissolvePowerOfComplex({int? depth}) => this;
 
   @override
+  Eq rationalizeComplexDenominator() => this;
+
+  @override
   Eq expandDivision({int? depth}) => this;
 
   @override
@@ -151,6 +154,9 @@ class Variable extends Eq {
 
   @override
   bool canDissolvePowerOfComplex() => false;
+
+  @override
+  bool canRationalizeComplexDenominator() => false;
 
   @override
   bool canDistributeExponent() => false;

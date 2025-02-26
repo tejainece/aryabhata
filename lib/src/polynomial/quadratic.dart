@@ -12,7 +12,7 @@ class Quadratic implements Polynomial {
   }
 
   @override
-  Eq get discriminant => (c1.pow(two) - Eq.c(4) * c2 * c0).simplify();
+  Eq get discriminant => (c1.pow(two) - Eq.c(4) * c2 * c0).simplify(debug: true);
 
   @override
   List<Eq> solve() {
