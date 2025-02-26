@@ -91,8 +91,8 @@ class Power extends Eq {
     }
     final base = this.base.dissolveConstants(depth: depth);
     final exponent = this.exponent.dissolveConstants(depth: depth);
-    final bc = base.toConstant();
-    final ec = exponent.toConstant();
+    final bc = base.isSimpleConstant() ? base.toConstant()! : null;
+    final ec = exponent.isSimpleConstant() ? exponent.toConstant()! : null;
     if ((bc?.isNaN ?? false) || (ec?.isNaN ?? false)) return nan;
     if (ec != null && bc != null) {
       if (bc.isEqual(0) && ec.isEqual(0)) return nan;
@@ -459,7 +459,7 @@ class Power extends Eq {
   }
 
   @override
-  bool get isLone => true;
+  bool needsParenthesis({bool noMinus = false}) => false;
 
   @override
   bool isSimpleConstant() {
@@ -472,6 +472,9 @@ class Power extends Eq {
 
   @override
   bool get isSingle => true;
+
+  @override
+  bool get isNegative => false;
 
   @override
   bool hasVariable(Variable v) =>
@@ -650,6 +653,9 @@ class Power extends Eq {
     if (canDistributeExponent()) return Simplification.distributeExponent;
     if (canExpandPowers()) return Simplification.expandPowers;
     if (canDissolvePowerOfPower()) return Simplification.dissolvePowerOfPower;
+    if (canDissolvePowerOfComplex()) {
+      return Simplification.dissolvePowerOfComplex;
+    }
     return null;
   }
 
@@ -693,12 +699,12 @@ class Power extends Eq {
       sb.write(spec.rparen);
     }
     sb.write(spec.power);
-    if (exponent.isLone) {
-      sb.write(exponent.toString(spec: spec));
-    } else {
+    if (exponent.needsParenthesis()) {
       sb.write(spec.lparen);
       sb.write(exponent.toString(spec: spec));
       sb.write(spec.rparen);
+    } else {
+      sb.write(exponent.toString(spec: spec));
     }
     return sb.toString();
   }

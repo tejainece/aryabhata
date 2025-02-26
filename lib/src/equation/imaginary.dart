@@ -76,13 +76,16 @@ class Imaginary extends Eq {
   Eq? tryCancelDivision(Eq other) => other is Imaginary ? one : null;
 
   @override
-  bool get isLone => true;
+  bool needsParenthesis({bool noMinus = false}) => false;
 
   @override
   bool isSimpleConstant() => false;
 
   @override
   bool get isSingle => true;
+
+  @override
+  bool get isNegative => false;
 
   @override
   bool hasVariable(Variable v) => false;

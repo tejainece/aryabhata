@@ -9,5 +9,5 @@ void main() {
   print(quartic);
 
   final sols = quartic.solve();
-  print(sols.first.simplify());
+  print(sols.first.simplify(debug: true));
 }

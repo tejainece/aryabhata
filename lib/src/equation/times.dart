@@ -10,15 +10,16 @@ class Times extends Eq {
     : assert(expressions.isNotEmpty),
       expressions = UnmodifiableListView<Eq>(expressions);
 
-  factory Times(Iterable<Eq> expressions) {
+  factory Times(Iterable expressions) {
     final ret = <Eq>[];
-    for (final e in expressions) {
+    for (final item in expressions) {
+      final e = Eq.from(item);
       if (e is Times) {
         for (final t in e.expressions) {
           if (t.toConstant()?.isEqual(1) ?? false) continue;
           ret.add(t);
         }
-      } else if (e.toConstant()?.isEqual(1) ?? false) {
+      } else if (e.isSimpleConstant() && e.toConstant()!.isEqual(1)) {
         continue;
       } else {
         ret.add(e);
@@ -79,6 +80,26 @@ class Times extends Eq {
       depth = depth - 1;
       if (depth < 0) return this;
     }
+    final ret = <Eq>[];
+    num constant = 1;
+    for (Eq e in expressions) {
+      e = e.dissolveConstants(depth: depth);
+      if (!e.isSimpleConstant()) {
+        ret.add(e);
+        continue;
+      }
+      constant *= e.toConstant()!;
+    }
+    if (constant.isNaN || constant.isInfinite || constant.isEqual(0)) {
+      return Constant(constant);
+    }
+    if (ret.isEmpty) {
+      return Constant(constant);
+    } else if (!constant.isEqual(1)) {
+      ret.insert(0, Eq.c(constant).dissolveMinus());
+    }
+    return Times(ret);
+    /*
     final list = <Eq>[];
     for (Eq e in expressions) {
       e = e.dissolveConstants(depth: depth);
@@ -105,6 +126,7 @@ class Times extends Eq {
       ret.insert(0, Eq.c(constant).dissolveMinus());
     }
     return Times(ret);
+     */
   }
 
   @override
@@ -494,13 +516,17 @@ class Times extends Eq {
   bool get isSingle => false;
 
   @override
-  bool get isLone {
-    if (expressions.length == 1) {
-      return expressions[0].isLone;
+  bool needsParenthesis({bool noMinus = false}) {
+    if (noMinus && expressions.first.isNegative) return true;
+    /*if (expressions.length == 1) {
+      return expressions[0].needsParenthesis();
     }
-    return expressions.every((e) => e.isLone);
-    // return false;
+    return expressions.every((e) => e.needsParenthesis());*/
+    return false;
   }
+
+  @override
+  bool get isNegative => false;
 
   @override
   bool isSimpleConstant() => expressions.every((e) => e.isSimpleConstant());
@@ -540,6 +566,7 @@ class Times extends Eq {
     return true;
   }
 
+  @override
   (List<Eq>, List<Eq>) separateDivision() {
     final numerators = <Eq>[];
     final denominators = <Eq>[];
@@ -563,6 +590,15 @@ class Times extends Eq {
     for (int i = 0; i < expressions.length; i++) {
       final e = expressions[i];
       if (e.canDissolveConstants()) return true;
+      if (!e.isSimpleConstant()) continue;
+      if(i > 0) return true;
+      countConstants++;
+    }
+    return countConstants > 1;
+    /*
+    for (int i = 0; i < expressions.length; i++) {
+      final e = expressions[i];
+      if (e.canDissolveConstants()) return true;
       for (final term in e.multiplicativeTerms().expressions) {
         final c = term.toConstant();
         if (c == null) continue;
@@ -573,6 +609,7 @@ class Times extends Eq {
       }
     }
     return false;
+     */
   }
 
   @override
@@ -764,12 +801,12 @@ class Times extends Eq {
     if (numerators.isNotEmpty) {
       for (int i = 0; i < numerators.length; i++) {
         final n = numerators[i];
-        if (n.isLone) {
-          sb.write(n.toString(spec: spec));
-        } else {
+        if (n.needsParenthesis(noMinus: true)) {
           sb.write(spec.lparen);
           sb.write(n.toString(spec: spec));
           sb.write(spec.rparen);
+        } else {
+          sb.write(n.toString(spec: spec));
         }
         if (i < numerators.length - 1) {
           sb.write(spec.times);

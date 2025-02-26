@@ -29,7 +29,10 @@ abstract class Trig extends Eq {
   );
 
   @override
-  bool get isLone => true;
+  bool needsParenthesis({bool noMinus = false}) => false;
+
+  @override
+  bool get isNegative => false;
 
   @override
   bool isSimpleConstant() => expression.isSimpleConstant();
@@ -46,7 +49,7 @@ abstract class Trig extends Eq {
   @override
   bool canDissolveConstants() {
     if (expression.canDissolveConstants()) return true;
-    return expression.toConstant() != null;
+    return expression.isSimpleConstant();
   }
 
   @override

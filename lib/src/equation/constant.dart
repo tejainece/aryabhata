@@ -99,7 +99,13 @@ class Constant extends Eq {
   bool get isSingle => true;
 
   @override
-  bool get isLone => true;
+  bool needsParenthesis({bool noMinus = false}) {
+    if (noMinus && isNegative) return true;
+    return false;
+  }
+
+  @override
+  bool get isNegative => value.isNegative;
 
   @override
   bool isSimpleConstant() => true;

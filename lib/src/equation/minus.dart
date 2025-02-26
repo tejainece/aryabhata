@@ -208,7 +208,13 @@ class Minus extends Eq {
   bool get isSingle => expression.isSingle;
 
   @override
-  bool get isLone => true; //expression.isLone;
+  bool needsParenthesis({bool noMinus = false}) {
+    if (noMinus) return true;
+    return false;
+  }
+
+  @override
+  bool get isNegative => true;
 
   @override
   bool isSimpleConstant() => expression.isSimpleConstant();
@@ -299,13 +305,13 @@ class Minus extends Eq {
     final exp = expression;
     if (exp is Constant) {
       if (exp.value.isNegative) {
-        return exp.toString(spec: spec);
+        return exp.value.abs().toString();
       }
-      return '-${exp.toString(spec: spec)}';
-    } else if (exp.isLone) {
-      return '-${exp.toString(spec: spec)}';
+      return '-${exp.value.toString()}';
+    } else if (exp.needsParenthesis(noMinus: true) && exp is! Times) {
+      return '-(${expression.toString(spec: spec)})';
     }
-    return '-(${expression.toString(spec: spec)})';
+    return '-${exp.toString(spec: spec)}';
   }
 
   @override

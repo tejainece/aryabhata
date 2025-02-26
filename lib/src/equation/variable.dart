@@ -89,13 +89,17 @@ class Variable extends Eq {
   }
 
   @override
-  bool get isLone => true;
+  bool needsParenthesis({bool noMinus = false}) => false;
 
   @override
   bool isSimpleConstant() => false;
 
   @override
   bool get isSingle => true;
+
+  @override
+  bool get isNegative => false;
+
   @override
   bool hasVariable(Variable v) => v.name == name;
 

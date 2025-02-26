@@ -53,12 +53,11 @@ class Plus extends Eq {
     for (int i = 0; i < expressions.length; i++) {
       Eq e = expressions[i];
       e = e.dissolveConstants(depth: depth);
-      final c = e.toConstant();
-      if (c != null) {
-        constant += c;
+      if (!e.isSimpleConstant()) {
+        ret.add(e);
         continue;
       }
-      ret.add(e);
+      constant += e.toConstant()!;
     }
     if (ret.isEmpty) {
       return Constant(constant);
@@ -138,7 +137,7 @@ class Plus extends Eq {
       if (e.isSimpleConstant()) {
         real += e.toConstant()!;
         continue;
-      } else if(e is Imaginary) {
+      } else if (e is Imaginary) {
         imaginary += 1;
       } else if (e is! Times) {
         return null;
@@ -606,10 +605,16 @@ class Plus extends Eq {
   bool get isSingle => false;
 
   @override
-  bool get isLone {
-    if (expressions.length != 1) return false;
-    return expressions[0].isLone;
+  bool needsParenthesis({bool noMinus = false}) {
+    if (noMinus && expressions.first.isNegative) {
+      return true;
+    }
+    if (expressions.length != 1) return true;
+    return expressions[0].needsParenthesis(noMinus: noMinus);
   }
+
+  @override
+  bool get isNegative => false;
 
   @override
   bool isSimpleConstant() => expressions.every((e) => e.isSimpleConstant());
@@ -659,14 +664,13 @@ class Plus extends Eq {
 
   @override
   bool canDissolveConstants() {
-    if (expressions.length == 1) return expressions.first.toConstant() != null;
     int countConstants = 0;
-    for (final e in expressions) {
+    for (int i = 0; i < expressions.length; i++) {
+      final e = expressions[i];
       if (e.canDissolveConstants()) return true;
-      final c = e.toConstant();
-      if (c == null) continue;
-      if (c.isEqual(0)) return true;
-      if (e.toConstant() != null) countConstants++;
+      if (!e.isSimpleConstant()) continue;
+      if(i > 0) return true;
+      countConstants++;
     }
     return countConstants > 1;
   }
@@ -782,7 +786,7 @@ class Plus extends Eq {
           sb.write(spec.plus);
         }
       }
-      bool needsParen = expression is Minus || expression is Plus;
+      bool needsParen = expression.needsParenthesis(noMinus: true);
       if (needsParen) {
         sb.write(spec.lparen);
       }

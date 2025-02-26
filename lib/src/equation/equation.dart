@@ -147,9 +147,11 @@ abstract class Eq {
 
   Eq? tryCancelDivision(Eq other);
 
-  bool get isLone;
+  bool needsParenthesis({bool noMinus = false});
 
   bool get isSingle;
+
+  bool get isNegative;
 
   bool hasVariable(Variable v);
 
@@ -227,6 +229,8 @@ abstract class Eq {
         ret = ret.expandPowers();
       } else if (s == Simplification.dissolvePowerOfPower) {
         ret = ret.dissolvePowerOfPower();
+      } else if(s == Simplification.dissolvePowerOfComplex) {
+        ret = ret.dissolvePowerOfComplex();
       } else if (s == Simplification.distributeExponent) {
         ret = ret.distributeExponent();
       } else {
@@ -262,6 +266,7 @@ enum Simplification {
   // combinePowers,
   expandPowers,
   dissolvePowerOfPower,
+  dissolvePowerOfComplex,
   distributeExponent,
 }
 
