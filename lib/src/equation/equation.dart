@@ -247,7 +247,7 @@ abstract class Eq {
         ret = ret.dropMinus();
       }
       if (debug) {
-        print('$ret');
+        print(ret.toString(spec: EquationPrintSpec(maxPrecision: 3)));
       }
     }
     return ret;

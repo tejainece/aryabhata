@@ -13,6 +13,8 @@ class EquationPrintSpec {
 
   final String rparen;
 
+  final int? maxPrecision;
+
   const EquationPrintSpec({
     this.plus = '+',
     this.minus = '-',
@@ -21,5 +23,6 @@ class EquationPrintSpec {
     this.power = '^',
     this.lparen = '(',
     this.rparen = ')',
+    this.maxPrecision,
   });
 }

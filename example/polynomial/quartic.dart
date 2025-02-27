@@ -10,7 +10,12 @@ void main() {
 
   final sols = quartic.solve();
   print('-----------------------------------------------------');
-  for(final sol in sols) {
-    print(sol);
+  for (final sol in sols) {
+    print(sol.toString(spec: EquationPrintSpec(maxPrecision: 3)));
   }
+  /*print(
+    sols.last
+        .simplify(debug: true)
+        .toString(spec: EquationPrintSpec(maxPrecision: 3)),
+  );*/
 }

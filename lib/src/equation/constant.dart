@@ -191,7 +191,7 @@ class Constant extends Eq {
     if (value.isNegative) {
       sb.write(spec.minus);
     }
-    sb.write(value.abs().stringMaybeInt);
+    sb.write(value.abs().stringMaybeInt(maxPrecision: spec.maxPrecision));
     return sb.toString();
   }
 
@@ -230,13 +230,20 @@ extension NumExt on num {
 
   int? get tryToInt => isInt ? round() : null;
 
-  String get stringMaybeInt {
-    if (isInt) {
+  String stringMaybeInt({int? maxPrecision}) {
+    if (this is int || isInt) {
       return round().toString();
     } else if (isInfinite) {
       return '∞';
+    } else if (isNaN) {
+      return 'Nan';
     }
-    return toString();
+    String str = toString();
+    if (maxPrecision == null) return str;
+    if (!str.contains('.')) return str;
+    final parts = str.split('.');
+    if(parts[1].length <= maxPrecision) return str;
+    return toStringAsFixed(maxPrecision);
   }
 
   bool isEqual(num other, [double epsilon = 1e-6]) {

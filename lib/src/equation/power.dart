@@ -333,7 +333,9 @@ class Power extends Eq {
   Eq rationalizeComplexDenominator() {
     final base = this.base.rationalizeComplexDenominator();
     final exponent = this.exponent.rationalizeComplexDenominator();
-    if (exponent != -one) return Power(base, exponent);
+    if (!exponent.isSimpleConstant() || exponent.toConstant() != -1) {
+      return Power(base, exponent);
+    }
     Plus? plus;
     if (base is Plus) {
       plus = base;
@@ -350,7 +352,7 @@ class Power extends Eq {
     }
     final (real, imaginary) = rec;
     final denom = real * real + imaginary * imaginary;
-    return Plus([real / denom, imaginary / denom]);
+    return Plus([real / denom, -i * Eq.c(imaginary / denom)]);
   }
 
   @override
@@ -663,7 +665,9 @@ class Power extends Eq {
         exponent.canRationalizeComplexDenominator()) {
       return true;
     }
-    if (exponent != -one) return false;
+    if (!exponent.isSimpleConstant() || exponent.toConstant() != -1) {
+      return false;
+    }
     Plus? plus;
     if (base is Plus) {
       plus = base as Plus;
