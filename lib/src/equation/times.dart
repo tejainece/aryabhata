@@ -75,6 +75,27 @@ class Times extends Eq {
   }
 
   @override
+  (num, num)? toComplexConstant() {
+    num constant = 1;
+    bool isImaginary = false;
+    for (var e in expressions) {
+      if(e is Imaginary) {
+        if(isImaginary) return null;
+        isImaginary = true;
+        continue;
+      } else if(e.isSimpleConstant()) {
+        constant *= e.toConstant()!;
+        continue;
+      }
+      return null;
+    }
+    if(isImaginary) {
+      return (0, constant);
+    }
+    return (constant, 0);
+  }
+
+  @override
   Eq dissolveConstants({int? depth}) {
     if (depth != null) {
       depth = depth - 1;

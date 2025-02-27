@@ -19,6 +19,9 @@ class Imaginary extends Eq {
   num? toConstant() => null;
 
   @override
+  (num, num)? toComplexConstant() => (0, 1);
+
+  @override
   Eq factorOutMinus({int? depth}) => this;
 
   @override

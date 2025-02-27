@@ -1,6 +1,5 @@
-import 'dart:math';
-
 import 'package:equation/equation.dart';
+import 'package:equation/variables.dart';
 
 void main() {
   /*{

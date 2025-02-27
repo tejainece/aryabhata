@@ -78,6 +78,8 @@ abstract class Eq {
 
   bool isSimpleConstant();
 
+  (num, num)? toComplexConstant();
+
   Eq withConstant(num c) {
     if (c.abs() < 1e-6) {
       return Constant(0);

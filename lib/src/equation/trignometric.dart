@@ -244,6 +244,10 @@ class Cos extends Trig {
     return Cos(expression.dissolvePowerOfComplex(depth: depth));
   }
 
+  // TODO should this do something if base and exponent are complex
+  @override
+  (num, num)? toComplexConstant() => null;
+
   @override
   Eq expandDivision({int? depth}) {
     if (depth != null) {
@@ -466,6 +470,10 @@ class Sin extends Trig {
     }
     return Sin(expression.dissolvePowerOfComplex(depth: depth));
   }
+
+  // TODO should this do something if base and exponent are complex
+  @override
+  (num, num)? toComplexConstant() => null;
 
   @override
   Eq distributeExponent({int? depth}) {
@@ -720,6 +728,10 @@ class Tan extends Trig {
     }
     return Tan(expression.dissolvePowerOfComplex(depth: depth));
   }
+
+  // TODO should this do something if base and exponent are complex
+  @override
+  (num, num)? toComplexConstant() => null;
 
   @override
   Eq rationalizeComplexDenominator() =>

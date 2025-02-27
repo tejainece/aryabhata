@@ -15,4 +15,9 @@ void main() {
     simplified = simplified.simplify();
     print(simplified);
   }
+  {
+    Power eq = i.pow(1 / 3);
+    Eq simplified = eq.dissolvePowerOfComplex();
+    print(simplified);
+  }
 }

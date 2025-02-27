@@ -35,6 +35,9 @@ class Variable extends Eq {
   double? toConstant() => null;
 
   @override
+  (num, num)? toComplexConstant() => null;
+
+  @override
   Eq expandMultiplications({int? depth}) => this;
 
   @override
@@ -182,48 +185,3 @@ class Variable extends Eq {
     }
   }
 }
-
-const a = Variable._('a');
-
-const b = Variable._('b');
-
-const c = Variable._('c');
-
-const d = Variable._('d');
-
-const h = Variable._('h');
-
-const k = Variable._('k');
-
-const l = Variable._('l');
-
-const m = Variable._('m');
-
-const n = Variable._('n');
-
-const r = Variable._('r');
-
-const w = Variable._('w');
-
-const t = Variable._('t');
-
-const x = Variable._('x');
-
-const y = Variable._('y');
-
-const z = Variable._('z');
-
-const A = Variable._('A');
-
-const B = Variable._('B');
-
-const C = Variable._('C');
-
-const h1 = Variable._('h1');
-const k1 = Variable._('k1');
-const r1 = Variable._('r1');
-const h2 = Variable._('h2');
-const k2 = Variable._('k2');
-const r2 = Variable._('r2');
-
-const theta = Variable._('θ');

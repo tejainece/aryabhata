@@ -15,6 +15,9 @@ class Constant extends Eq {
   num toConstant() => value;
 
   @override
+  (num, num)? toComplexConstant() => (1, 0);
+
+  @override
   (num, Eq) separateConstant() => (value, Constant(1));
 
   @override
@@ -242,7 +245,7 @@ extension NumExt on num {
     if (maxPrecision == null) return str;
     if (!str.contains('.')) return str;
     final parts = str.split('.');
-    if(parts[1].length <= maxPrecision) return str;
+    if (parts[1].length <= maxPrecision) return str;
     return toStringAsFixed(maxPrecision);
   }
 

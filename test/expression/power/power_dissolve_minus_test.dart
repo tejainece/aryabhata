@@ -1,4 +1,5 @@
 import 'package:equation/equation.dart';
+import 'package:equation/variables.dart';
 import 'package:test/test.dart';
 
 import '../../testing.dart';

@@ -23,6 +23,13 @@ class Minus extends Eq {
   }
 
   @override
+  (num, num)? toComplexConstant() {
+    final rec = expression.toComplexConstant();
+    if (rec == null) return null;
+    return (-rec.$1, -rec.$2);
+  }
+
+  @override
   Eq dissolveConstants({int? depth}) {
     if (depth != null) {
       depth = depth - 1;

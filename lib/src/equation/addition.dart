@@ -130,22 +130,23 @@ class Plus extends Eq {
     return Plus(list);
   }
 
+  @override
   (num, num)? toComplexConstant() {
     num real = 0;
     num imaginary = 0;
     for (Eq e in expressions) {
-      if (e.isSimpleConstant()) {
-        real += e.toConstant()!;
-        continue;
-      } else if (e is Imaginary) {
-        imaginary += 1;
-      }
       num minus = 1;
       if (e is Minus) {
         minus = -1;
         e = e.expression;
       }
-      if (e is! Times) {
+      if (e.isSimpleConstant()) {
+        real += -e.toConstant()!;
+        continue;
+      } else if (e is Imaginary) {
+        imaginary += -1;
+        continue;
+      } else if (e is! Times) {
         return null;
       }
       if (e.expressions.length != 2) {
