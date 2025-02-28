@@ -79,17 +79,17 @@ class Times extends Eq {
     num constant = 1;
     bool isImaginary = false;
     for (var e in expressions) {
-      if(e is Imaginary) {
-        if(isImaginary) return null;
+      if (e is Imaginary) {
+        if (isImaginary) return null;
         isImaginary = true;
         continue;
-      } else if(e.isSimpleConstant()) {
+      } else if (e.isSimpleConstant()) {
         constant *= e.toConstant()!;
         continue;
       }
       return null;
     }
-    if(isImaginary) {
+    if (isImaginary) {
       return (0, constant);
     }
     return (constant, 0);
@@ -836,22 +836,26 @@ class Times extends Eq {
   String toString({EquationPrintSpec spec = const EquationPrintSpec()}) {
     final (numerators, denominators) = separateDivision();
     final sb = StringBuffer();
-    if (numerators.isNotEmpty) {
-      for (int i = 0; i < numerators.length; i++) {
-        final n = numerators[i];
-        if (n.needsParenthesis()) {
-          sb.write(spec.lparen);
-          sb.write(n.toString(spec: spec));
-          sb.write(spec.rparen);
-        } else {
-          sb.write(n.toString(spec: spec));
-        }
-        if (i < numerators.length - 1) {
-          sb.write(spec.times);
+    if (numerators.isEmpty) {
+      sb.write('1');
+    } else {
+      if (numerators.length == 1 && denominators.isEmpty) {
+        sb.write(numerators.first.toString(spec: spec));
+      } else {
+        for (int i = 0; i < numerators.length; i++) {
+          final n = numerators[i];
+          if (n.needsParenthesis()) {
+            sb.write(spec.lparen);
+            sb.write(n.toString(spec: spec));
+            sb.write(spec.rparen);
+          } else {
+            sb.write(n.toString(spec: spec));
+          }
+          if (i < numerators.length - 1) {
+            sb.write(spec.times);
+          }
         }
       }
-    } else {
-      sb.write('1');
     }
     if (denominators.isNotEmpty) {
       sb.write(spec.divide);
