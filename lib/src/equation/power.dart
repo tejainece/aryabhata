@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 class Power extends Eq {
   final Eq base;

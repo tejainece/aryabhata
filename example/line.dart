@@ -1,5 +1,5 @@
-import 'package:equation/equation.dart';
-import 'package:equation/variables.dart';
+import 'package:aryabhata/aryabhata.dart';
+import 'package:aryabhata/variables.dart';
 
 void main() {
   var line = a * x + b * y + c;

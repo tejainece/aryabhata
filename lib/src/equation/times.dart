@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:collection/collection.dart';
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 class Times extends Eq {
   final UnmodifiableListView<Eq> expressions;

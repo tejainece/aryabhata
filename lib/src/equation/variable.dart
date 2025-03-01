@@ -1,4 +1,4 @@
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 class Variable extends Eq {
   final String name;

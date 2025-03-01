@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 // TODO implement log
 

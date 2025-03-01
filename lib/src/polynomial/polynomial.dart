@@ -1,4 +1,4 @@
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 export 'quadratic.dart';
 export 'quartic.dart';

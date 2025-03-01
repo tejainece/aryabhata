@@ -1,4 +1,4 @@
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 class Constant extends Eq {
   final num value;

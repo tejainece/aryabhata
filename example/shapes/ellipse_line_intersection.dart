@@ -1,5 +1,5 @@
-import 'package:equation/equation.dart';
-import 'package:equation/variables.dart';
+import 'package:aryabhata/aryabhata.dart';
+import 'package:aryabhata/variables.dart';
 
 void main() {
   final r1 = Variable('r1'), r2 = Variable('r2');

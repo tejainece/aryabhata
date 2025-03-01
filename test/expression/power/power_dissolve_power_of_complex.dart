@@ -1,4 +1,4 @@
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
 

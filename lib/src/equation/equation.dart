@@ -1,4 +1,4 @@
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 export 'addition.dart';
 export 'constant.dart';
@@ -8,6 +8,8 @@ export 'power.dart';
 export 'times.dart';
 export 'trignometric.dart';
 export 'variable.dart';
+
+export 'simplify_plus.dart';
 
 abstract class Eq {
   const Eq();

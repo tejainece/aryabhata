@@ -1,4 +1,4 @@
-import 'package:equation/equation.dart';
+import 'package:aryabhata/aryabhata.dart';
 
 void main() {
   for(int c = 0; c < 10; c++) {

@@ -1,4 +1,4 @@
-import 'package:equation/src/equation/variable.dart';
+import 'package:aryabhata/src/equation/variable.dart';
 
 final a = Variable('a');
 
@@ -42,5 +42,6 @@ final r1 = Variable('r1');
 final h2 = Variable('h2');
 final k2 = Variable('k2');
 final r2 = Variable('r2');
+final r3 = Variable('r3');
 
 final theta = Variable('θ');
