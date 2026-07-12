@@ -9,6 +9,7 @@ class _Test {
   final Eq res;
   final bool can;
 
+  // ignore: unused_element_parameter
   _Test(this.input, this.res, {this.can = true});
 
   static List<_Test> cases = [

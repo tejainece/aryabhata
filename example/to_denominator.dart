@@ -1,4 +1,3 @@
-import 'package:aryabhata/aryabhata.dart';
 
 void main() {
   /*{

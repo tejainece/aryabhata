@@ -11,6 +11,7 @@ class _Test {
   final String string;
   final bool can;
 
+  // ignore: unused_element_parameter
   _Test(this.eq, this.res, this.string, {this.can = true});
 
   static List<_Test> cases = [

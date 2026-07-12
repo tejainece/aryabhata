@@ -228,7 +228,7 @@ extension NumExt on num {
     if (this is int) return true;
     if (isInfinite) return false;
     if (isNaN) return false;
-    return (this.abs() - abs().round()).abs() < 1e-8;
+    return (abs() - abs().round()).abs() < 1e-8;
   }
 
   int? get tryToInt => isInt ? round() : null;

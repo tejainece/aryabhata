@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:aryabhata/aryabhata.dart';
@@ -720,7 +719,6 @@ class Plus extends Eq {
   bool canFactorOutAddition() {
     throw UnimplementedError();
     // TODO
-    return false;
   }
 
   @override

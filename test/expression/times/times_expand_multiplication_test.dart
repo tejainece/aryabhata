@@ -11,6 +11,7 @@ class _Test {
   final bool can;
   final String string;
 
+  // ignore: unused_element_parameter
   _Test(this.eq, this.res, this.string, {this.can = true});
 
   static final List<_Test> divisions = [
