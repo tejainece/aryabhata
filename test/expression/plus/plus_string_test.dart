@@ -10,7 +10,13 @@ class _Test {
   _Test(this.eq, this.res);
 
   static final List<_Test> minus = [
-    _Test(Plus([-Times([-10]), x]), '-(-10)+x'),
+    _Test(
+      Plus([
+        -Times([-10]),
+        x,
+      ]),
+      '-(-10)+x',
+    ),
   ];
 
   static final List<_Test> divides = [
@@ -23,7 +29,7 @@ class _Test {
 void main() {
   group('Plus.toString', () {
     test('minus', () {
-      for(final test in _Test.minus) {
+      for (final test in _Test.minus) {
         final res = test.eq.toString();
         expect(res, test.res);
       }

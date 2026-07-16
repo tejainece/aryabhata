@@ -24,7 +24,7 @@ class _TestCase {
 
   static final extras = <_TestCase>[
     _TestCase(Times([x]), x),
-    ];
+  ];
 }
 
 void main() {

@@ -54,13 +54,11 @@ void main() {
 
   {
     Eq first = solutions.first;
-    first =
-        first.substitute(subs).simplify();
+    first = first.substitute(subs).simplify();
     print(first);
 
     Eq second = solutions[1];
-    second =
-        second.substitute(subs).simplify();
+    second = second.substitute(subs).simplify();
     print(second);
   }
 }

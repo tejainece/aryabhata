@@ -10,8 +10,7 @@ class _Test {
 
   _Test(this.eq, this.res, this.string);
 
-  static List<_Test> cases = [
-  ];
+  static List<_Test> cases = [];
 }
 
 void main() {

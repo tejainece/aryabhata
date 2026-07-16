@@ -22,7 +22,7 @@ class _Test {
 void main() {
   group('Minus.toString', () {
     test('test', () {
-      for(final test in _Test.cases) {
+      for (final test in _Test.cases) {
         final res = test.eq.toString();
         expect(res, test.str);
       }

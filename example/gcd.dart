@@ -6,5 +6,5 @@ void main() {
   print('$a $b');
   final g = gcd(a, b);
   print(g);
-  print('${a/g} ${b/g}');
+  print('${a / g} ${b / g}');
 }

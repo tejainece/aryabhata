@@ -14,7 +14,7 @@ class _Case {
 
   static final simple = [
     /*_Case(Times([Eq.c(-2)]), Times([Eq.c(-2)]), '[-2]'),*/
-    _Case(Times([Eq.c(-2) * x]), Times([Eq.c(-2) * x]), '[-2, x]')
+    _Case(Times([Eq.c(-2) * x]), Times([Eq.c(-2) * x]), '[-2, x]'),
     /*_Case(a * b, a * b, '[a, b]'),
     _Case(x * (a + a * b), x * a * (one + b), '[x, a, 1+b]'),*/
   ];

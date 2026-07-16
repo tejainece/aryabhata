@@ -30,7 +30,7 @@ class Cubic implements Polynomial {
     final d0 = c2 * c2 - c3 * c1 * 3;
     final d1 = (c2.pow(3) * 2) - (c3 * c2 * c1 * 9) + (c3 * c3 * c0 * 27);
     final sqrtD = (discriminant * c3 * c3 * -27).pow(1 / 2);
-    final C = ((d1 + sqrtD) / 2).pow(1/3);
+    final C = ((d1 + sqrtD) / 2).pow(1 / 3);
     final constTerm = Eq.c(-1) / (c3 * 3);
 
     final solutions = <Eq>[

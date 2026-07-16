@@ -51,7 +51,6 @@ class _Test {
     _Test(Constant(1).pow(Constant(-1)), Constant(1)),
     _Test(Constant(1).pow(Constant(0)), Constant(1)),
     _Test(Constant(1).pow(x).pow(y), Constant(1)),*/
-
     _Test(x.pow(Eq.c(2)).lpow(Eq.c(-1)), x.pow(-Eq.c(2))),
   ];
 }

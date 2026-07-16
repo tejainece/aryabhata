@@ -13,16 +13,13 @@ void main() {
   Eq ellipse =
       ((x - h2) * Cos(theta) + (y - k2) * Sin(theta)).pow(Constant(2)) /
           r2.pow(Constant(2)) +
-          ((x - h2) * Sin(theta) - (y - k2) * Cos(theta)).pow(Constant(2)) /
-              r3.pow(Constant(2)) -
-          one;
+      ((x - h2) * Sin(theta) - (y - k2) * Cos(theta)).pow(Constant(2)) /
+          r3.pow(Constant(2)) -
+      one;
   ellipse = ellipse.simplify();
   print(ellipse);
 
-  ellipse = ellipse.substitute({
-    'x': eqX,
-    'y': eqY,
-  });
+  ellipse = ellipse.substitute({'x': eqX, 'y': eqY});
   ellipse = ellipse.simplify();
   print(ellipse);
   ellipse = (ellipse as Plus).simplifyEq0();

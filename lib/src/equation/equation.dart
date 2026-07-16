@@ -22,31 +22,31 @@ abstract class Eq {
   }
 
   factory Eq.fromJson(dynamic json) {
-    if(json is String) {
+    if (json is String) {
       return Variable(json);
-    } else if(json is num) {
+    } else if (json is num) {
       return Constant(json);
-    } else if(json is bool) {
+    } else if (json is bool) {
       return Constant(json ? 1 : 0);
-    } else if(json is! Map) {
+    } else if (json is! Map) {
       throw ArgumentError('cannot create expression from ${json.runtimeType}');
     }
     final String type = json['type'];
-    if(type == EqJsonType.imaginary.name) {
+    if (type == EqJsonType.imaginary.name) {
       return i;
-    } else if(type == EqJsonType.minus.name) {
+    } else if (type == EqJsonType.minus.name) {
       return Minus.fromJson(json);
-    } else if(type == EqJsonType.sin.name) {
+    } else if (type == EqJsonType.sin.name) {
       return Sin.fromJson(json);
-    } else if(type == EqJsonType.cos.name) {
+    } else if (type == EqJsonType.cos.name) {
       return Cos.fromJson(json);
-    } else if(type == EqJsonType.tan.name) {
+    } else if (type == EqJsonType.tan.name) {
       return Tan.fromJson(json);
-    } else if(type == EqJsonType.plus.name) {
+    } else if (type == EqJsonType.plus.name) {
       return Plus.fromJson(json);
-    } else if(type == EqJsonType.times.name) {
+    } else if (type == EqJsonType.times.name) {
       return Times.fromJson(json);
-    } else if(type == EqJsonType.power.name) {
+    } else if (type == EqJsonType.power.name) {
       return Power.fromJson(json);
     }
     throw UnsupportedError(type);
@@ -238,9 +238,9 @@ abstract class Eq {
         ret = ret.expandPowers();
       } else if (s == Simplification.dissolvePowerOfPower) {
         ret = ret.dissolvePowerOfPower();
-      } else if(s == Simplification.dissolvePowerOfComplex) {
+      } else if (s == Simplification.dissolvePowerOfComplex) {
         ret = ret.dissolvePowerOfComplex();
-      } else if(s == Simplification.rationalizeComplexDenominator) {
+      } else if (s == Simplification.rationalizeComplexDenominator) {
         ret = ret.rationalizeComplexDenominator();
       } else if (s == Simplification.distributeExponent) {
         ret = ret.distributeExponent();
@@ -300,4 +300,3 @@ extension NumExtension on num {
 
   Eq lpow(exp) => Eq.c(this).lpow(exp);
 }
-
