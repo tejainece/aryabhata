@@ -8,11 +8,10 @@ import '../../testing.dart';
 class _Test {
   final Eq eq;
   final Eq res;
-  final bool can;
+  final bool can = true;
   final String string;
 
-  // ignore: unused_element_parameter
-  _Test(this.eq, this.res, this.string, {this.can = true});
+  _Test(this.eq, this.res, this.string);
 
   static final List<_Test> divisions = [
     _Test((a + b) / d, a / d + b / d, 'a/d+b/d'),

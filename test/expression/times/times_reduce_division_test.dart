@@ -9,10 +9,9 @@ class _Test {
   final Eq eq;
   final Eq res;
   final String string;
-  final bool can;
+  final bool can = true;
 
-  // ignore: unused_element_parameter
-  _Test(this.eq, this.res, this.string, {this.can = true});
+  _Test(this.eq, this.res, this.string);
 
   static List<_Test> cases = [
     _Test(

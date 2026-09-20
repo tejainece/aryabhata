@@ -7,10 +7,9 @@ import '../../testing.dart';
 class _Test {
   final Eq input;
   final Eq res;
-  final bool can;
+  final bool can = true;
 
-  // ignore: unused_element_parameter
-  _Test(this.input, this.res, {this.can = true});
+  _Test(this.input, this.res);
 
   static List<_Test> cases = [
     _Test((x * y).pow(Eq.c(2)), x.pow(Eq.c(2)) * y.pow(Eq.c(2))),
